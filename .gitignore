@@ -1,0 +1,17 @@
+# OS / sync cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+
+# Editor / tooling
+.vscode/
+.idea/
+
+# Node (for when the app build lands here)
+node_modules/
+dist/
+build/
+.env
+.env.*
+*.log
