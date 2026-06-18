@@ -187,3 +187,16 @@ I ran every build command end-to-end. Status:
     `tauri build` with `.dmg` works, which is what `release.yml` uses. Not a code
     defect — a Tauri/macOS headless limitation. (I killed a stuck 2-hour dmg build +
     its orphaned `hdiutil`/mounted volume during this check.)
+
+15. **Windows: the app is NOT functional yet (one bounded bridge gap).** The UI
+    (Tauri/WebView2) and the manifest store (Rust `fs::rename` = MoveFileExW-replace)
+    are Windows-safe, but `lyceum-engine::spawn::resolve_claude` is **Unix-only**
+    (`$HOME`, `/opt/homebrew`/`/usr/local/bin`, a bare `claude` filename) — so on
+    Windows `preflight()` finds no Claude and **blocks launch**. Fix lives in
+    `spawn.rs`: resolve via `%USERPROFILE%`/`%LOCALAPPDATA%\Programs\…`, look for
+    `claude.exe`/`claude.cmd` (honor `PATHEXT`), spawn `.cmd` shims correctly (Rust
+    refuses `.cmd` post-`BatBadBut`), and strip the `\\?\` prefix `fs::canonicalize`
+    adds (the `dunce` crate) so the child cwd / `--resume` work. `CREATE_NO_WINDOW`
+    is already handled. A true confirmation needs a Windows host with Claude Code
+    logged in. **Ask me to "add Windows bridge support" and I'll implement + add
+    `#[cfg(windows)]` resolver tests; the live Windows smoke is then yours.**

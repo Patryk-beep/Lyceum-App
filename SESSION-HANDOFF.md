@@ -2,25 +2,32 @@
 
 > **START HERE.** Self-contained current state for a fresh, zero-context session. Last updated 2026-06-18.
 
+## Current state (one line)
+M0–M4 + the **Aurelia Dark** default theme + an "Aurelia visual fidelity" pass are **built, tested, and pushed** to GitHub `Patryk-beep/Lyceum-App` `main` (commit `a17a133`, in sync). Clean tree. **Not yet functional on Windows** (one bounded bridge gap — see Next actions).
+
 ## What this is
 Lyceum-App is an OS-agnostic **Tauri** desktop app (Rust core + React/Vite/TS webview) that is a GUI over the **Lyceum** learning system (the `lyceum` Claude Code plugin of nine skills). It drives the user's local `claude` as a per-subject `claude -p` stream-json child for generation; a deterministic Rust `lyceum-core` crate owns the mechanics; app + Claude share `learning/<slug>/manifest.json` per subject.
 
-## Accomplished this session
-- Produced the full implementation plan — **`PLAN.md`** — via a 10-agent workflow; answered all 10 design questions (`PLAN.md` §12).
-- **Built & tested M0 (scaffold + deterministic engine)** and **M1 (Claude streaming bridge)**. See "Build progress" below.
-- Landing page moved to `/site` + Pages Actions workflow; CI workflows added.
-- Running list of autonomous decisions / non-blocking questions kept in **`QUESTIONS-FOR-REVIEW.md`**.
+## Accomplished
+- Full plan (`PLAN.md`, 10-agent workflow) → built **M0–M4** milestone-by-milestone, each tested before advancing.
+- Imported the **Aurelia Dark** design (DesignSync) → now the default theme; added 3 more theme token sets.
+- "Aurelia visual fidelity" feature: hardened by **2 adversarial series** (64 findings → 10 confirmed, folded into `.rune/plan-aurelia-fidelity*.md`) then implemented — sigil, medallion seals, opt-in gilt dial, cross-subject study streak, gilded Dashboard cover.
+- Landing page in `/site` (+ `pages.yml`); CI in `.github/workflows/`. Autonomous decisions/caveats in **`QUESTIONS-FOR-REVIEW.md`**.
 
-## Build progress (milestone-tested) — M0–M4 all built & tested
+## Build progress (milestone-tested) — M0–M4 + Aurelia all built, tested, pushed
 - **M0 DONE** — `app/` Tauri+React+Rust workspace. `lyceum-core` pure engine (manifest model, SRS, mastery, routing, ids, store, progress, summary). `src-tauri` engine-only commands over a headless-testable service. React Night-theme Dashboard from the golden subject. `golden.json` generated from the model + parity test.
 - **M1 DONE** — `lyceum-engine` Claude `stream-json` bridge: spawn+env-scrub, tolerant parser, session/turn state machine + `--resume` + watchdog, `BridgeEvent`, plugin staging+validation. LIVE SESSION drawer/console + Diagnostics. **Both gates pass vs real Claude** (bridge + skill); live tests gated by `LYCEUM_LIVE_CLAUDE=1`.
 - **M2 DONE** — `run_step` orchestrator + reload-validator + per-subject SessionManager + `create_subject`/`run_subject_step` + deterministic review lane. **Acceptance: the full vertical slice replays deterministically offline** (fake-claude) AND a live orchestrator turn (real Claude Write→reload→validate). Skill machine-output (quizzes/placement-items) patched + mirrored to the source plugin for upstreaming.
 - **M3 DONE** — analytics (reconciled with fixture) + heatmap, deterministic placement adaptive loop + screen, Capstone, Research/Lesson markdown views, multi-subject dashboard routing, onboarding wizard.
 - **M4 DONE (here)** — theme switching (Night/Almanac/Momentum + Settings), **preflight blocking gate** (Claude required, no offline), updater plugin+config, bundle config (mac/win/linux), release + CI matrix workflows. Cross-OS **signed** installers + auto-update + fresh-VM smoke need YOUR runners/certs/keypair — see `QUESTIONS-FOR-REVIEW.md` §11–13.
+- **Aurelia theme + visual fidelity DONE** — `tokens.aurelia-dark.css` (deep-indigo glass, EB Garamond + Jost fonts bundled) as default; `Sigil`, `SectionDivider`, medallion `MasterySeal`, opt-in gilt-dial `MasteryRing`, `lyceum-core::streak` + `study_streak` cmd + `StreakCard`, gilded Dashboard cover. **Token-driven** (all 4 themes benefit); a grep-for-hex gate forbids literal hex in new CSS.
 - Spike revised two plan items (`QUESTIONS-FOR-REVIEW.md` §7–8): **no private `CLAUDE_CONFIG_DIR`** (breaks auth — isolate via `--setting-sources project` + `--strict-mcp-config`); doctor asserts "9 lyceum skills present" not "only lyceum".
 
 ## Test counts (last green run)
-~81 Rust tests (`cargo test --workspace`) + 21 frontend (`pnpm test`) + 2 live (`LYCEUM_LIVE_CLAUDE=1`). clippy `-D warnings` + fmt + tsc + vite build all clean.
+~88 Rust tests (`cargo test --workspace`) + 28 frontend (`pnpm test`) + live bridge/orchestrate (`LYCEUM_LIVE_CLAUDE=1`). clippy `-D warnings` + fmt + tsc + vite build all clean.
+
+## NOT functional on Windows yet (one bounded gap)
+`lyceum-engine::spawn::resolve_claude` is Unix-only (`$HOME`, `/opt/homebrew`, bare `claude`) → preflight blocks launch on Windows. The UI (WebView2) and store (Rust `fs::rename` = MoveFileExW-replace) are Windows-safe. Fix lives in `spawn.rs`: `%USERPROFILE%`/`%LOCALAPPDATA%`, `claude.exe`/`.cmd`, `.cmd`-spawn handling, strip the `\\?\` `canonicalize` prefix (dunce crate). `CREATE_NO_WINDOW` is already handled.
 
 ## Toolchain (now installed)
 - `rustup`/`cargo` 1.96, `claude` v2.1.181, `node` v24 / `pnpm`. `app/.npmrc` sets `verify-deps-before-run=false`; `pnpm.onlyBuiltDependencies` allows esbuild + tauri CLI.
