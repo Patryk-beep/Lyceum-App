@@ -12,12 +12,14 @@
 //!    type level: mastery-bearing mutations require a [`MasteryWriter`] capability
 //!    token that this crate never constructs for application code.
 
+pub mod analytics;
 pub mod concurrency;
 pub mod date;
 pub mod error;
 pub mod ids;
 pub mod mastery;
 pub mod model;
+pub mod placement;
 pub mod progress;
 pub mod routing;
 pub mod srs;

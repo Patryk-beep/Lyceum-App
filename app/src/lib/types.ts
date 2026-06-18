@@ -48,6 +48,45 @@ export interface StepDto {
   nextAction: string;
 }
 
+export interface AnalyticsReport {
+  subject: string;
+  level: number;
+  target: number;
+  modulesTotal: number;
+  modulesMastered: number;
+  overallMastery: number | null;
+  calibration: { predictions: number; hits: number; accuracy: number | null };
+  modules: {
+    moduleId: string;
+    title: string;
+    level: number;
+    status: string;
+    meanMastery: number | null;
+  }[];
+  heatmap: { moduleId: string; objectiveId: string; mastery: number | null }[];
+  review: { total: number; due: number; retired: number; lapses: number };
+  history: { date: string; skill: string; event: string; result: string }[];
+}
+
+export interface PlacementItem {
+  id: string;
+  tier: number;
+  stem: string;
+  scoringKey: string;
+  type: string;
+}
+
+export interface PlacementPool {
+  items: PlacementItem[];
+}
+
+export interface PlacementState {
+  done: boolean;
+  nextTier: number | null;
+  recommendedLevel: number | null;
+  asked: number;
+}
+
 export interface WorkspaceInfo {
   root: string;
   subjectCount: number;

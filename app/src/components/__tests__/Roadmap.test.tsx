@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 
 import { RoadmapView } from "../../routes/Roadmap";
@@ -7,9 +8,13 @@ import type { Manifest } from "../../lib/types";
 
 const manifest = golden as unknown as Manifest;
 
+function renderView(ui: React.ReactNode) {
+  return render(<BrowserRouter>{ui}</BrowserRouter>);
+}
+
 describe("RoadmapView", () => {
   it("renders one node per module with the correct seal states", () => {
-    render(<RoadmapView manifest={manifest} />);
+    renderView(<RoadmapView manifest={manifest} />);
     const nodes = screen.getAllByTestId("roadmap-node");
     expect(nodes).toHaveLength(3);
 
@@ -21,7 +26,7 @@ describe("RoadmapView", () => {
   });
 
   it("shows the run-next-step affordance", () => {
-    render(<RoadmapView manifest={manifest} />);
+    renderView(<RoadmapView manifest={manifest} />);
     expect(
       screen.getByRole("button", { name: /run next step/i }),
     ).toBeInTheDocument();

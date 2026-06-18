@@ -43,3 +43,11 @@ export function useReviewDue(slug: string) {
   });
 }
 
+export function useAnalytics(slug: string) {
+  return useQuery({
+    queryKey: ["analytics", slug],
+    queryFn: () => api.subjectAnalytics(slug),
+    enabled: !!slug,
+  });
+}
+

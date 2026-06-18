@@ -42,6 +42,28 @@ describe("DashboardView", () => {
     expect(screen.getByTestId("review-due")).toHaveTextContent("3");
   });
 
+  it("renders three subjects at different phases with their routed next actions", () => {
+    const capstoneSubject = {
+      ...secondSummary,
+      slug: "physics",
+      subject: "Physics",
+      phase: "capstone",
+      status: "capstone",
+      reviewsDue: 2,
+      nextAction: "all modules through target mastered — run the capstone",
+    };
+    renderView(
+      <DashboardView subjects={[goldenSummary, secondSummary, capstoneSubject]} />,
+    );
+    expect(screen.getAllByTestId("subject-card")).toHaveLength(3);
+    // each subject surfaces its own engine-routed next action
+    expect(screen.getAllByText(/complete it/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/not taught yet/)).toBeInTheDocument();
+    expect(screen.getByText(/run the capstone/)).toBeInTheDocument();
+    // total reviews due = 3 + 0 + 2 = 5
+    expect(screen.getByTestId("review-due")).toHaveTextContent("5");
+  });
+
   it("shows the empty state with a seed button when no subjects exist", () => {
     const onSeedDemo = vi.fn();
     renderView(<DashboardView subjects={[]} onSeedDemo={onSeedDemo} />);

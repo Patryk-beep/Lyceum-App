@@ -606,3 +606,121 @@
   outline: none;
   border-color: var(--gold-line);
 }
+
+/* ---- Roadmap sub-nav ---- */
+.roadmap__subnav {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.roadmap__subnav a {
+  color: var(--muted);
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+.roadmap__subnav a:hover {
+  color: var(--gold);
+  border-bottom-color: var(--gold-line);
+}
+
+/* ---- Analytics ---- */
+.analytics {
+  max-width: 760px;
+}
+.analytics h1 {
+  font-size: 26px;
+  margin-bottom: 16px;
+}
+.analytics__module-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.analytics__history {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ---- Heatmap ---- */
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.heatmap__row {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.heatmap__label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.heatmap__cells {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.heatmap__cell {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 1px solid var(--line);
+}
+.heatmap__empty {
+  font-size: 12px;
+}
+
+/* ---- Reader (markdown) ---- */
+.reader-screen {
+  max-width: 720px;
+}
+.reader {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--lamplight);
+}
+.reader h1,
+.reader h2,
+.reader h3 {
+  font-family: var(--font-serif);
+  margin: 1.2em 0 0.4em;
+}
+.reader code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.85em;
+  background: var(--panel-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.reader table {
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+.reader th,
+.reader td {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+}
+
+/* ---- Placement / Capstone ---- */
+.placement,
+.capstone {
+  max-width: 560px;
+}
+.placement h1,
+.capstone h1 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}

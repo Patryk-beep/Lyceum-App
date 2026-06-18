@@ -60,3 +60,52 @@ pub fn review_grade(
         workspace::today(),
     )
 }
+
+#[tauri::command]
+pub fn subject_analytics(
+    state: State<AppState>,
+    slug: String,
+) -> AppResult<lyceum_core::analytics::AnalyticsReport> {
+    service::subject_analytics(&state.workspace, &slug, workspace::today())
+}
+
+#[tauri::command]
+pub fn read_artifact(state: State<AppState>, slug: String, relpath: String) -> AppResult<String> {
+    service::read_artifact(&state.workspace, &slug, &relpath)
+}
+
+#[tauri::command]
+pub fn placement_pool(
+    state: State<AppState>,
+    slug: String,
+) -> AppResult<lyceum_core::placement::PlacementPool> {
+    service::placement_pool(&state.workspace, &slug)
+}
+
+#[tauri::command]
+pub fn placement_step(answers: Vec<bool>) -> service::PlacementStateDto {
+    service::placement_step(&answers)
+}
+
+#[tauri::command]
+pub fn placement_finalize(
+    state: State<AppState>,
+    slug: String,
+    level: u8,
+    evidence: String,
+) -> AppResult<Manifest> {
+    service::placement_finalize(&state.workspace, &slug, level, evidence, workspace::today())
+}
+
+/// The 6-level mastery scale (LEVELS.md), for the onboarding wizard.
+#[tauri::command]
+pub fn get_levels() -> Vec<(u8, &'static str, &'static str)> {
+    vec![
+        (1, "Aware", "recall terms, follow guided steps"),
+        (2, "Functional", "explain concepts, run routine procedures"),
+        (3, "Competent", "work unsupervised on familiar tasks"),
+        (4, "Proficient", "handle complex, non-standard problems"),
+        (5, "Expert", "produce original, field-quality work"),
+        (6, "Master", "extend the practice; teach the field"),
+    ]
+}
