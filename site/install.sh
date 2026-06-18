@@ -34,15 +34,29 @@ fi
 work="$(mktemp -d)"
 dmg="$work/lyceum.dmg"
 mp="$work/mnt"
+mounted=0
 mkdir -p "$mp"
-# Always detach the image and clean up, even on failure.
-trap 'hdiutil detach "$mp" >/dev/null 2>&1 || true; rm -rf "$work"' EXIT
+# Detach the image and remove the temp dir on exit. A freshly mounted dmg can be
+# briefly held by Spotlight/DiskArbitration, so retry the detach (with -force)
+# before giving up — and never let cleanup noise or a stubborn unmount change the
+# exit status: by the time this runs, the install has already finished.
+cleanup() {
+  if [ "$mounted" = 1 ]; then
+    n=0
+    until hdiutil detach "$mp" -force >/dev/null 2>&1; do
+      n=$((n + 1)); [ "$n" -ge 5 ] && break; sleep 1
+    done
+  fi
+  rm -rf "$work" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
 
 echo "Lyceum: downloading $(basename "$url")…"
 curl -fL -H "User-Agent: $UA" -o "$dmg" "$url"
 
 echo "Lyceum: installing to /Applications…"
 hdiutil attach -nobrowse -noautoopen -quiet -mountpoint "$mp" "$dmg"
+mounted=1
 app="$(find "$mp" -maxdepth 1 -name '*.app' -print | head -n1)"
 if [ -z "$app" ]; then
   echo "Lyceum: no .app found inside the disk image." >&2
