@@ -4,6 +4,7 @@
 mod commands;
 mod engine_cmds;
 mod error;
+mod prompts;
 mod service;
 mod state;
 mod workspace;
@@ -69,6 +70,7 @@ pub fn run() {
                 staged_plugin,
                 preflight_error,
                 model: MODEL.to_string(),
+                sessions: Default::default(),
             });
             Ok(())
         })
@@ -79,9 +81,13 @@ pub fn run() {
             commands::compute_next_step,
             commands::regenerate_progress,
             commands::seed_demo,
+            commands::review_due,
+            commands::review_grade,
             engine_cmds::preflight,
             engine_cmds::claude_doctor,
             engine_cmds::claude_smoke,
+            engine_cmds::run_subject_step,
+            engine_cmds::create_subject,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

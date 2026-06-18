@@ -23,6 +23,7 @@ pub mod routing;
 pub mod srs;
 pub mod store;
 pub mod summary;
+pub mod validate;
 
 #[cfg(any(test, feature = "fixtures"))]
 pub mod test_support;

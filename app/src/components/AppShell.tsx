@@ -5,6 +5,7 @@ import { SessionDrawer } from "./SessionDrawer";
 
 const NAV = [
   { to: "/library", label: "Library" },
+  { to: "/new", label: "New subject" },
   { to: "/review", label: "Review" },
   { to: "/today", label: "Today" },
   { to: "/analytics", label: "Analytics" },

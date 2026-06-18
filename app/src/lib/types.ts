@@ -22,6 +22,32 @@ export interface RouteDto {
   target: string | null;
 }
 
+export interface GradePreview {
+  again: number;
+  hard: number;
+  good: number;
+  easy: number;
+}
+
+export interface ReviewCandidate {
+  itemId: string;
+  prompt: string;
+  answer: string;
+  moduleId: string | null;
+  boxNum: number | null;
+  preview: GradePreview;
+}
+
+export type ReviewGrade = "again" | "hard" | "good" | "easy";
+
+export interface StepDto {
+  ranTurn: boolean;
+  ok: boolean;
+  validationErrors: string[];
+  manifest: Manifest | null;
+  nextAction: string;
+}
+
 export interface WorkspaceInfo {
   root: string;
   subjectCount: number;

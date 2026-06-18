@@ -26,3 +26,20 @@ export function useSeedDemo() {
     },
   });
 }
+
+export function useManifest(slug: string) {
+  return useQuery({
+    queryKey: ["manifest", slug],
+    queryFn: () => api.readManifest(slug),
+    enabled: !!slug,
+  });
+}
+
+export function useReviewDue(slug: string) {
+  return useQuery({
+    queryKey: ["review", slug],
+    queryFn: () => api.reviewDue(slug),
+    enabled: !!slug,
+  });
+}
+

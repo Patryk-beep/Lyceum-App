@@ -76,3 +76,17 @@ Also rewrite `progress.md` in the exact format defined in MANIFEST.md (module ma
 - **Any miss resets the item to Box 1, due tomorrow** — the failure is the signal.
 - **Always consolidate a productive-failure task** before moving on.
 - **Allocate ids as (max existing numeric suffix) + 1; never reuse an id.** Diagnose the SPECIFIC error, not just "wrong".
+
+## Machine output (for the Lyceum app)
+
+When run inside the **Lyceum desktop app**, in addition to the manifest writes, emit fresh follow-up retrieval items as a machine-readable quiz file the app can schedule and grade locally:
+
+- Path: `quizzes/<moduleId>-<unixSeconds>.json`
+- Shape:
+  ```json
+  { "items": [
+    { "id": "q1", "stem": "…", "choices": ["…", "…"], "correct": 0,
+      "rationale": "why", "objectiveIds": ["m03-o1"], "lane": "review" }
+  ] }
+  ```
+- Use the `review` lane for spaced-recall items you seed into `reviewQueue`, and `formative` for ungraded checks. Mastery-bearing grading stays in THIS skill (the single writer) — never mark a `lane:"assignment"` item correct outside an assess turn. This file is **machine output only**; the human feedback still lives in the assignment file.

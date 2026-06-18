@@ -8,6 +8,7 @@
 
 pub mod error;
 pub mod events;
+pub mod orchestrate;
 pub mod protocol;
 pub mod session;
 pub mod spawn;
@@ -15,6 +16,7 @@ pub mod workspace;
 
 pub use error::{EngineError, Result};
 pub use events::BridgeEvent;
+pub use orchestrate::{run_step, StepReport, TurnRunner};
 pub use session::{ClaudeSession, TurnOutcome, WATCHDOG};
 pub use spawn::{canonical, resolve_claude, SpawnConfig};
 

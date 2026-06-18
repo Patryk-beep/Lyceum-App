@@ -1,6 +1,11 @@
-//! Shared application state: the workspace root + resolved engine handles.
+//! Shared application state: the workspace root, resolved engine handles, and the
+//! per-subject warm session map.
 
+use std::collections::HashMap;
 use std::path::PathBuf;
+
+use lyceum_engine::ClaudeSession;
+use tokio::sync::Mutex;
 
 pub struct AppState {
     pub workspace: PathBuf,
@@ -11,6 +16,8 @@ pub struct AppState {
     /// Human-readable preflight failure, if any.
     pub preflight_error: Option<String>,
     pub model: String,
+    /// Warm `claude` child per subject slug (one isolated session each).
+    pub sessions: Mutex<HashMap<String, ClaudeSession>>,
 }
 
 impl AppState {

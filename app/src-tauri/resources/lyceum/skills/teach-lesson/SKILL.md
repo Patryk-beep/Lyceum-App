@@ -61,3 +61,17 @@ Then rewrite `progress.md` in the exact format defined in MANIFEST.md (header li
 - **Allocate review-item ids as (max existing numeric suffix) + 1.** Never reuse an `r-id`.
 - **Lead concrete, flag misconceptions, dual-code.** These are the non-negotiable teaching moves, not optional flourishes.
 - **State, not conversation.** You read the manifest at the start and write it at the end; never assume another skill ran this session. Keep `manifest.json` valid JSON at all times.
+
+## Machine output (for the Lyceum app)
+
+When run inside the **Lyceum desktop app** (an automated headless session), also write the lesson's checks-for-understanding to a machine-readable quiz file so the app can render and grade them locally without spending another model turn:
+
+- Path: `quizzes/<moduleId>-<unixSeconds>.json`
+- Shape:
+  ```json
+  { "items": [
+    { "id": "q1", "stem": "…", "choices": ["…", "…"], "correct": 0,
+      "rationale": "why this is right", "objectiveIds": ["m03-o1"], "lane": "formative" }
+  ] }
+  ```
+- `lane` ∈ `formative` (rationale only — writes nothing mastery-bearing), `review` (feeds the Leitner queue), `assignment` (mastery-bearing — graded only by `assess-understanding`, never locally). Prefer free/short recall; use `choices`+`correct` only for genuine MCQs with plausible distractors. This file is **machine output only** — it never replaces the human-readable lesson, and writing it does **not** assert mastery.

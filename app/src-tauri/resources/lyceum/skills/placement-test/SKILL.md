@@ -61,3 +61,17 @@ Do **not** write `objective.mastery` or any `module.status` — those are read-o
 - **State, not conversation.** Read `manifest.json` first; if it is missing, stop and send the user to `lyceum:learn`. Write the manifest last and bump `updated`. Never assume another skill ran this session.
 - Allocate any new ids as (max existing numeric suffix) + 1; never reuse an id.
 - Cap the test at 10 items; prefer free/short recall over recognition-only multiple choice (it leaks the answer).
+
+## Machine output (for the Lyceum app)
+
+When run inside the **Lyceum desktop app**, FIRST write the full item pool to a machine-readable file so the app can drive the adaptive floor/ceiling loop locally (PLACEMENT.md), then make one final write of the `placement{}` block + `placement.md` from the collected transcript:
+
+- Path: `placement-items.json`
+- Shape:
+  ```json
+  { "items": [
+    { "id": "p1", "tier": 2, "stem": "…", "type": "short",
+      "scoringKey": "expected answer / accept-list / rubric" }
+  ] }
+  ```
+- A few items per tier (1–6), each tagged with its `tier` and a `scoringKey`. This is **machine output only**; the human transcript still lives in `placement.md`, and this skill never writes mastery.

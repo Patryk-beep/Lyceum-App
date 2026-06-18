@@ -18,10 +18,25 @@ pub fn manifest_path(workspace: &Path, slug: &str) -> PathBuf {
     subject_dir(workspace, slug).join("manifest.json")
 }
 
-/// Today's civil date. M0 uses the UTC date; the per-subject civil-date offset
-/// (MANIFEST §5.7 "shared today" contract) lands in M2.
+/// Today's civil date (UTC). The per-subject civil-date offset contract is a
+/// future refinement; UTC is correct for scheduling within a session.
 pub fn today() -> Date {
     OffsetDateTime::now_utc().date()
+}
+
+/// A unique, sortable, filesystem-safe stamp for the manifest backup ring.
+pub fn backup_stamp() -> String {
+    let n = OffsetDateTime::now_utc();
+    format!(
+        "{:04}-{:02}-{:02}T{:02}-{:02}-{:02}-{:09}",
+        n.year(),
+        u8::from(n.month()),
+        n.day(),
+        n.hour(),
+        n.minute(),
+        n.second(),
+        n.nanosecond()
+    )
 }
 
 /// Probe which generated artifacts exist for a subject (drives routing/summary

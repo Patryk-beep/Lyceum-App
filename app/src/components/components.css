@@ -449,3 +449,160 @@
   color: var(--stage-assign);
   font-size: 12.5px;
 }
+
+/* ---- Roadmap ---- */
+.roadmap {
+  max-width: 760px;
+}
+.roadmap__header {
+  margin-bottom: 18px;
+}
+.roadmap__header h1 {
+  font-size: 28px;
+}
+.roadmap__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.roadmap-node {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 14px;
+  position: relative;
+  padding-bottom: 16px;
+}
+.roadmap-node__rail {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+.roadmap-node__rail::before {
+  content: "";
+  position: absolute;
+  top: 26px;
+  bottom: -10px;
+  width: 2px;
+  background: var(--line);
+}
+.roadmap-node:last-child .roadmap-node__rail::before {
+  display: none;
+}
+.roadmap-node__body {
+  padding: 14px 16px;
+}
+.roadmap-node__title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+}
+.roadmap-node__meta {
+  margin-top: 2px;
+  font-size: 12.5px;
+}
+
+.mastery-seal {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  z-index: 1;
+  background: var(--panel);
+}
+.mastery-seal--earned {
+  background: var(--gold);
+  color: #1a1505;
+  box-shadow: 0 0 12px var(--gold-soft);
+}
+.mastery-seal--active {
+  border: 2px solid var(--gold);
+  animation: lycPulse 1.6s infinite;
+}
+.mastery-seal--available {
+  border: 2px solid var(--line-strong);
+}
+.mastery-seal--locked {
+  border: 1px dashed var(--line-strong);
+  color: var(--faint);
+  font-size: 11px;
+}
+
+/* ---- Review ---- */
+.review-screen {
+  max-width: 560px;
+}
+.review-card {
+  padding: 22px;
+  border-left: 3px solid var(--stage-review);
+  margin-top: 12px;
+}
+.review-card__band {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--stage-review);
+  margin-bottom: 12px;
+}
+.review-card__prompt {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+.review-card__answer {
+  background: var(--panel-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+.review-card__grades {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.review-card__grade {
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 6px;
+}
+.review-card__interval {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---- Subject wizard ---- */
+.wizard {
+  max-width: 560px;
+}
+.wizard h1 {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+.wizard__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.wizard__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.wizard__input {
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: var(--font-sans);
+}
+.wizard__input:focus {
+  outline: none;
+  border-color: var(--gold-line);
+}

@@ -19,6 +19,15 @@ pub enum EngineError {
 
     #[error("serde: {0}")]
     Serde(String),
+
+    #[error("core: {0}")]
+    Core(String),
+}
+
+impl From<lyceum_core::CoreError> for EngineError {
+    fn from(e: lyceum_core::CoreError) -> Self {
+        EngineError::Core(e.to_string())
+    }
 }
 
 impl From<std::io::Error> for EngineError {

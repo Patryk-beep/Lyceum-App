@@ -100,3 +100,27 @@ ok, `session_id` captured, `--resume` continued the thread) and skill gate (all 
 lyceum skills loaded via `--plugin-dir`; Claude read `references/MANIFEST.md` and
 quoted the single-writer rule verbatim — proving genuine `${CLAUDE_PLUGIN_ROOT}`
 resolution). Transcripts saved as `app/tests/fixtures/streams/*.jsonl`.
+
+---
+
+## M2 notes (2026-06-18)
+
+9. **Skill machine-output is patched in BOTH places.** The `quizzes/<mod>-<ts>.json`
+   (teach-lesson, assess-understanding) and `placement-items.json` (placement-test)
+   "Machine output" sections were added to the **vendored** plugin
+   (`app/src-tauri/resources/lyceum/`, what the app bundles) AND mirrored into the
+   **source** plugin (`/Users/patryk/Lyceum-app/plugins/lyceum/`) so they're ready to
+   **upstream to `Patryk-beep/lyceum`**. You'll need to commit + push that plugin repo
+   yourself to publish them (it isn't a git repo on this machine).
+
+10. **Assess QUIZ-card (`grade_mcq`) deferred to M3.** The mastery gate is already
+    visible via the Roadmap (`MasterySeal` node states) and the deterministic Review
+    lane (`ReviewCard` + 4 SRS buttons with Rust-computed intervals). Local MCQ
+    grading from `quizzes/*.json` (the "generate once, drive many locally" economy)
+    rides with M3's lesson/quiz views, once a real teach turn has produced a quiz file.
+
+**M2 gate met:** the full vertical slice replays **deterministically offline** against
+a scripted fake-claude — empty `learning/` → curriculum → teach → assign → assess
+(m01 mastered, m02 unlocked by the prereq rule) → Leitner review (box1→box2) — with
+`validate()` clean at every checkpoint, and the reload-validator HALTs on an
+impossible state (`app/crates/lyceum-engine/tests/vertical_slice.rs`).
