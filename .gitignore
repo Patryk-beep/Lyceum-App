@@ -15,3 +15,13 @@ build/
 .env
 .env.*
 *.log
+
+# Rust build output
+target/
+
+# Working / process docs — useful locally, but not crucial to the app or to the
+# GitHub repo's functionality. Kept on disk, out of version control.
+.rune/
+/PLAN.md
+/QUESTIONS-FOR-REVIEW.md
+/SESSION-HANDOFF.md
