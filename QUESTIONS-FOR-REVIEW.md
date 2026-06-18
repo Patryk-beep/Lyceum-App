@@ -129,23 +129,36 @@ impossible state (`app/crates/lyceum-engine/tests/vertical_slice.rs`).
 
 ## M4 notes (2026-06-18) — packaging & what needs YOUR credentials
 
-11. **Auto-update: the committed pubkey is a throwaway — REGENERATE for real
-    releases.** `tauri.conf.json` → `plugins.updater.pubkey` holds a key I generated
-    so the config validates and the app builds. The matching **private key is NOT in
-    the repo** (it's in `/tmp` on this machine and will vanish). Before you ship
-    updates: run `pnpm tauri signer generate`, paste the new **public** key into
-    `tauri.conf.json`, and add the **private** key + password as the CI secrets
-    `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (see
-    `.github/workflows/release.yml`). `bundle.createUpdaterArtifacts` is `false` so
-    local builds work; flip it on (or pass via the action) once the key is wired.
+11. **Auto-update: the keypair swap is a GATING prerequisite before the first updater
+    release.** `tauri.conf.json` → `plugins.updater.pubkey` holds a throwaway key; the
+    matching **private key is NOT in the repo**. `bundle.createUpdaterArtifacts` stays
+    `false` in the committed config (so local/keyless builds work); `release.yml`
+    **auto-enables** updater artifacts via `src-tauri/tauri.updater.conf.json` ONLY when
+    the `TAURI_SIGNING_PRIVATE_KEY` secret is set — otherwise it builds a plain unsigned
+    release (no self-update). **Before the first updater release:** run `pnpm tauri signer
+    generate`, paste the new **public** key into `tauri.conf.json`, and add the **private**
+    key + password as the CI secrets `TAURI_SIGNING_PRIVATE_KEY` /
+    `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. Until then, `.sig` files can't verify on clients,
+    so do NOT advertise in-app updates.
 
-12. **Cross-platform signed installers need CI runners + your certs.** The release
-    workflow (`release.yml`) builds **macOS arm+intel, Windows, Linux** via
-    `tauri-action` on a tag push. Producing **notarized/codesigned** artifacts needs
-    your Apple Developer ID + notarization creds and a Windows code-signing cert as
-    repo secrets. The "fresh-VM install + auto-update" acceptance is a manual,
-    per-OS smoke I can't run from this one macOS box — that's the explicit
-    needs-your-machines item.
+12. **Cross-platform signing is wired as no-op-until-secrets; here's what enabling it
+    actually costs.** `release.yml` now passes the `APPLE_*` / `KEYCHAIN_PASSWORD` /
+    `AZURE_*` env through to `tauri-action`; with the secrets empty it SKIPS signing, so
+    macOS ships ad-hoc-signed (config `signingIdentity:"-"`) and Windows ships unsigned
+    (one-time SmartScreen). To enable real signing later, just add the secrets — no code
+    change:
+    - **macOS:** Apple Developer Program ($99/yr) → a *Developer ID Application* cert →
+      set `APPLE_CERTIFICATE`/`_PASSWORD`/`APPLE_SIGNING_IDENTITY`/`KEYCHAIN_PASSWORD` and
+      the App Store Connect API key (`APPLE_API_ISSUER`/`APPLE_API_KEY`/`APPLE_API_KEY_PATH`)
+      for notarization. `APPLE_SIGNING_IDENTITY` overrides the ad-hoc `"-"`.
+    - **Windows:** ⚠️ **Azure Trusted Signing (~$10/mo) EXCLUDES non-US/Canada individuals**
+      — given your jurisdiction the realistic path is an **OV cert + cloud signing** (e.g.
+      SSL.com eSigner; OV keys must now live on an HSM/cloud per the June-2023 CA/B rule),
+      wired via `bundle.windows.signCommand` (trusted-signing-cli or relic) in a release-only
+      `--config`. **No cert gives instant SmartScreen trust** (EV bypass removed 2024) —
+      reputation accrues per signed identity, so unsigned-early-access is reasonable for now.
+    - The **fresh-VM install + auto-update** acceptance is a manual, per-OS smoke I can't run
+      from this one macOS box — the explicit needs-your-machines item.
 
 13. **pnpm 11 quirk.** `pnpm` here ignores the package.json `onlyBuiltDependencies`
     allowlist and its pre-run deps check errors on the (harmless) ignored esbuild
@@ -188,15 +201,25 @@ I ran every build command end-to-end. Status:
     defect — a Tauri/macOS headless limitation. (I killed a stuck 2-hour dmg build +
     its orphaned `hdiutil`/mounted volume during this check.)
 
-15. **Windows: the app is NOT functional yet (one bounded bridge gap).** The UI
-    (Tauri/WebView2) and the manifest store (Rust `fs::rename` = MoveFileExW-replace)
-    are Windows-safe, but `lyceum-engine::spawn::resolve_claude` is **Unix-only**
-    (`$HOME`, `/opt/homebrew`/`/usr/local/bin`, a bare `claude` filename) — so on
-    Windows `preflight()` finds no Claude and **blocks launch**. Fix lives in
-    `spawn.rs`: resolve via `%USERPROFILE%`/`%LOCALAPPDATA%\Programs\…`, look for
-    `claude.exe`/`claude.cmd` (honor `PATHEXT`), spawn `.cmd` shims correctly (Rust
-    refuses `.cmd` post-`BatBadBut`), and strip the `\\?\` prefix `fs::canonicalize`
-    adds (the `dunce` crate) so the child cwd / `--resume` work. `CREATE_NO_WINDOW`
-    is already handled. A true confirmation needs a Windows host with Claude Code
-    logged in. **Ask me to "add Windows bridge support" and I'll implement + add
-    `#[cfg(windows)]` resolver tests; the live Windows smoke is then yours.**
+15. **Windows bridge — IMPLEMENTED (2026-06-18). Live smoke is the only thing left, and
+    it's yours.** `spawn::resolve_claude` is now cross-platform: it prefers
+    `%USERPROFILE%\.local\bin\claude.exe` (native), then the WinGet Links shim, then
+    `%APPDATA%\npm\claude.cmd` (npm-global), with a PATHEXT-aware `which` fallback;
+    `canonical()` uses `dunce` to strip the `\\?\` prefix; the two atomic-rename write
+    paths + the derived `progress.md` write are hardened against transient Windows file
+    locks. Proven offline by a real **`windows-latest` CI job** (compiles the `cfg(windows)`
+    path + runs its tests) and `cargo check --target x86_64-pc-windows-msvc` locally; pure
+    candidate-generator unit tests run on every host. **Final confirmation needs a Windows
+    box with Claude Code logged in:** launch → `preflight` shows `claudeFound:true` →
+    `claude_doctor` passes (9 lyceum skills, `mcp_servers==[]`, no hooks) → create a subject.
+
+16. **One-line installers + the publish-the-draft go-live step.** New `site/install.sh`
+    (`curl -fsSL … | sh`, macOS) and `site/install.ps1` (`irm … | iex`, Windows) pull the
+    latest asset from GitHub Releases and install it (mac: dmg → /Applications + quarantine
+    strip; win: NSIS `/S` silent, per-user, no admin). They're served by the existing Pages
+    workflow. **Both — and the updater's `latest.json` — require a PUBLISHED release:**
+    `release.yml` sets `releaseDraft: true`, and `releases/latest` 404s for a draft. So the
+    **go-live action is: tag `v*` → wait for the draft build → PUBLISH the release.** (Flip
+    `releaseDraft:false` if you'd rather auto-publish on tag.) Unsigned-early-access UX:
+    macOS Open-Anyway fallback; Windows one-time SmartScreen — both documented in the README
+    and echoed by the scripts.

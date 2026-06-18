@@ -4,7 +4,7 @@
 
 Lyceum App takes the same evidence-based skill principles of the Lyceum system and turns them into a standalone, interactive learning application: a real app that runs the full research → placement → curriculum → teach → assign → assess → review → capstone loop, with spaced repetition and mastery gating built in.
 
-> **Status:** The app itself is **not built yet**. This repository currently hosts the project's landing page (live below). The Lyceum **plugin** that the app is based on **works today** inside Claude Code — see *Use it now*.
+> **Status:** The desktop app is **built and in early access** (macOS + Windows) — install it in one line (see *Install the app* below). The Lyceum **plugin** it's based on also works today inside Claude Code — see *Use it now*.
 
 - **Live page:** https://patryk-beep.github.io/Lyceum-App/
 - **The system behind the app (Lyceum plugin):** https://github.com/Patryk-beep/lyceum
@@ -42,11 +42,38 @@ The app is coming, but you can use the full method today. In [Claude Code](https
 
 Then invoke the `learn` skill, name your subject, and pick your target level.
 
+## Install the app (early access)
+
+The desktop app is built for **macOS** and **Windows**. Install it in one line — the command
+pulls the latest installer from GitHub Releases:
+
+**macOS**
+
+```sh
+curl -fsSL https://patryk-beep.github.io/Lyceum-App/install.sh | sh
+```
+
+**Windows** (PowerShell)
+
+```powershell
+irm https://patryk-beep.github.io/Lyceum-App/install.ps1 | iex
+```
+
+Both download from a **published** GitHub release. The app is **unsigned early access**:
+
+- **macOS** — installed ad-hoc-signed and quarantine-stripped, so it launches directly. If macOS
+  still blocks it, allow it once via *System Settings ▸ Privacy & Security ▸ Open Anyway*.
+- **Windows** — a one-time SmartScreen prompt: choose *More info ▸ Run anyway*.
+
+The app drives your local, logged-in [Claude Code](https://code.claude.com) CLI (one isolated
+`claude` session per subject), so Claude Code must be installed and signed in. Updates: re-run the
+one-liner, or use *Settings ▸ Check for updates* in-app.
+
 ## Status
 
 - ✅ **Foundation / landing page** — live at https://patryk-beep.github.io/Lyceum-App/
 - ✅ **Method available now** — via the Lyceum plugin for Claude Code
-- 🚧 **Standalone app** — in development (not yet installable)
+- 🟢 **Standalone app** — early access; one-line install above (macOS + Windows), from a published release
 
 The landing page is a single self-contained `index.html` (inline CSS, one Google Fonts link, no build step) served via GitHub Pages.
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useThemeStore, type ThemeName } from "../stores/useThemeStore";
+import { checkForUpdate } from "../lib/updates";
 
 const THEMES: { key: ThemeName; label: string; hint: string }[] = [
   { key: "aurelia-dark", label: "Aurelia Dark", hint: "gilded indigo by candle-gold (default)" },
@@ -22,17 +23,54 @@ function loadNum(key: string, fallback: number): number {
   return fallback;
 }
 
+type UpdateUi =
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "uptodate" }
+  | { kind: "available"; version: string; install: () => Promise<void> }
+  | { kind: "installing" }
+  | { kind: "installed" }
+  | { kind: "error"; message: string };
+
 export function Settings() {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const [retention, setRetention] = useState(() => loadNum(RETENTION_KEY, 90));
   const [session, setSession] = useState(() => loadNum(SESSION_KEY, 30));
+  const [update, setUpdate] = useState<UpdateUi>({ kind: "idle" });
 
   function save(key: string, value: number) {
     try {
       localStorage.setItem(key, String(value));
     } catch {
       /* ignore */
+    }
+  }
+
+  async function onCheckUpdates() {
+    setUpdate({ kind: "checking" });
+    try {
+      const res = await checkForUpdate();
+      if (res.available && res.update) {
+        const handle = res.update;
+        setUpdate({
+          kind: "available",
+          version: res.version ?? "?",
+          install: async () => {
+            setUpdate({ kind: "installing" });
+            try {
+              await handle.downloadAndInstall();
+              setUpdate({ kind: "installed" });
+            } catch (e) {
+              setUpdate({ kind: "error", message: e instanceof Error ? e.message : String(e) });
+            }
+          },
+        });
+      } else {
+        setUpdate({ kind: "uptodate" });
+      }
+    } catch (e) {
+      setUpdate({ kind: "error", message: e instanceof Error ? e.message : String(e) });
     }
   }
 
@@ -95,6 +133,33 @@ export function Settings() {
         <p className="faint" style={{ marginTop: 10, fontSize: 12.5 }}>
           New subjects use these defaults; the spaced-review schedule is the fixed
           Leitner ladder.
+        </p>
+      </section>
+
+      <section className="card" style={{ padding: 18, marginTop: 14 }} data-testid="updates">
+        <div className="dashboard__section-title">Updates</div>
+        <button
+          className="btn btn--outline"
+          onClick={onCheckUpdates}
+          disabled={update.kind === "checking" || update.kind === "installing"}
+          data-testid="check-updates"
+        >
+          {update.kind === "checking" ? "Checking…" : "Check for updates"}
+        </button>
+        <p className="faint" style={{ marginTop: 10, fontSize: 12.5 }}>
+          {update.kind === "idle" && "Lyceum updates itself from signed GitHub releases."}
+          {update.kind === "uptodate" && "You're on the latest version."}
+          {update.kind === "available" && (
+            <>
+              Version {update.version} is available.{" "}
+              <button className="btn btn--primary" onClick={update.install} data-testid="install-update">
+                Install &amp; restart
+              </button>
+            </>
+          )}
+          {update.kind === "installing" && "Downloading and installing…"}
+          {update.kind === "installed" && "Update installed — restart Lyceum to finish."}
+          {update.kind === "error" && `Couldn't check for updates: ${update.message}`}
         </p>
       </section>
     </div>
