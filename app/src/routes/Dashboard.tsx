@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 
 import { ResumeHero } from "../components/ResumeHero";
 import { ReviewDueCard } from "../components/ReviewDueCard";
+import { SectionDivider } from "../components/SectionDivider";
+import { Sigil } from "../components/Sigil";
 import { StatGrid, type Stat } from "../components/StatGrid";
 import { SubjectCard } from "../components/SubjectCard";
 import { useSeedDemo, useSubjects } from "../lib/query";
@@ -40,9 +42,15 @@ export function DashboardView({
 }) {
   if (subjects.length === 0) {
     return (
-      <div className="card empty-state" data-testid="empty-state">
-        <div className="empty-state__title">No subjects yet</div>
-        <p>Start a new subject, or load a sample course to explore the app.</p>
+      <div className="card empty-state empty-state--cover" data-testid="empty-state">
+        <Sigil size={132} />
+        <div className="empty-state__wordmark">LYCEUM</div>
+        <SectionDivider label="Per Studium · Ad Gloriam" />
+        <div className="empty-state__title">Begin your first work</div>
+        <p>
+          Each subject begins as pale marble; with every mastered rite it takes its
+          gold — until it gleams, a finished treasure, and yours.
+        </p>
         <button
           className="btn btn--primary"
           onClick={onSeedDemo}
@@ -64,7 +72,7 @@ export function DashboardView({
       <StatGrid stats={buildStats(subjects)} />
       <ReviewDueCard totalDue={totalReviewsDue} onReview={onReview} />
       <div>
-        <div className="dashboard__section-title">Your subjects</div>
+        <SectionDivider label="Your subjects" />
         <div className="subject-grid" style={{ marginTop: 12 }}>
           {[resume, ...rest].map((s) => (
             <SubjectCard key={s.slug} summary={s} onOpen={onOpenSubject} />

@@ -9,6 +9,7 @@ import type {
   ReviewGrade,
   RouteDto,
   StepDto,
+  StreakInfo,
   SubjectSummary,
   WorkspaceInfo,
 } from "./types";
@@ -31,6 +32,7 @@ export const api = {
     invoke<string>("create_subject", { subject, target, start }),
   subjectAnalytics: (slug: string) =>
     invoke<AnalyticsReport>("subject_analytics", { slug }),
+  studyStreak: () => invoke<StreakInfo>("study_streak"),
   readArtifact: (slug: string, relpath: string) =>
     invoke<string>("read_artifact", { slug, relpath }),
   placementPool: (slug: string) =>

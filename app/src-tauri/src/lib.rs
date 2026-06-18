@@ -85,6 +85,7 @@ pub fn run() {
             commands::review_due,
             commands::review_grade,
             commands::subject_analytics,
+            commands::study_streak,
             commands::read_artifact,
             commands::placement_pool,
             commands::placement_step,

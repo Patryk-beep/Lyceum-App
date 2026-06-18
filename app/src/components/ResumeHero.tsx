@@ -24,7 +24,7 @@ export function ResumeHero({
         </div>
       </div>
       <div className="resume-hero__side">
-        <MasteryRing value={summary.meanMastery} size={96} />
+        <MasteryRing value={summary.meanMastery} size={96} dial label="mastery" />
         <div className="faint metric" style={{ fontSize: 12 }}>
           Level {summary.level} of {summary.target}
         </div>

@@ -87,6 +87,12 @@ export interface PlacementState {
   asked: number;
 }
 
+export interface StreakInfo {
+  current: number;
+  longest: number;
+  lastActive: string | null;
+}
+
 export interface WorkspaceInfo {
   root: string;
   subjectCount: number;

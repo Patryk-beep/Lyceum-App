@@ -70,6 +70,11 @@ pub fn subject_analytics(
 }
 
 #[tauri::command]
+pub fn study_streak(state: State<AppState>) -> lyceum_core::streak::StreakInfo {
+    service::study_streak(&state.workspace, workspace::today())
+}
+
+#[tauri::command]
 pub fn read_artifact(state: State<AppState>, slug: String, relpath: String) -> AppResult<String> {
     service::read_artifact(&state.workspace, &slug, &relpath)
 }

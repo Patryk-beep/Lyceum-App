@@ -319,6 +319,37 @@ pub fn subject_analytics(
     Ok(lyceum_core::analytics::analytics(&manifest, today))
 }
 
+/// Cross-subject "days at study" streak: union every subject's `history[].date`
+/// (a corrupt manifest is skipped) and run the pure streak helper. `today` is UTC.
+pub fn study_streak(ws: &Path, today: Date) -> lyceum_core::streak::StreakInfo {
+    let mut dates: Vec<Date> = Vec::new();
+    for slug in workspace::list_slugs(ws) {
+        if let Ok(manifest) = read_manifest(ws, &slug) {
+            dates.extend(manifest.history.iter().map(|h| h.date));
+        }
+    }
+    lyceum_core::streak::streak_info(&dates, today)
+}
+
+#[cfg(test)]
+mod streak_tests {
+    use super::*;
+    use time::macros::date;
+
+    #[test]
+    fn study_streak_unions_history_across_subjects() {
+        let tmp = tempfile::tempdir().unwrap();
+        ensure_workspace(tmp.path()).unwrap();
+        // golden.json seeds history on 2026-06-12 and 2026-06-17.
+        seed_demo(tmp.path(), date!(2026 - 06 - 18)).unwrap();
+        // No streak ending 2026-06-18 (last activity 06-17, gap before -> but 17 is
+        // yesterday of 18, so current counts from 17 = 1).
+        let info = study_streak(tmp.path(), date!(2026 - 06 - 18));
+        assert_eq!(info.current, 1);
+        assert_eq!(info.last_active.as_deref(), Some("2026-06-17"));
+    }
+}
+
 /// Read a subject artifact (lesson/research/curriculum/capstone markdown or json).
 /// Rejects path traversal — the relative path must stay inside the subject folder.
 pub fn read_artifact(ws: &Path, slug: &str, relpath: &str) -> AppResult<String> {

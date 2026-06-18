@@ -24,6 +24,7 @@ pub mod progress;
 pub mod routing;
 pub mod srs;
 pub mod store;
+pub mod streak;
 pub mod summary;
 pub mod validate;
 

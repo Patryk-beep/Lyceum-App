@@ -21,6 +21,31 @@
   font-size: 15px;
   color: var(--text);
 }
+/* Aurelia "gilt dial": inner disc (panel token so it isn't a dark island on a
+   light theme) + a small gilt caption. Number stays var(--text). */
+.mastery-ring__disc {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: var(--panel-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.mastery-ring__disc .mastery-ring__value {
+  font-family: var(--font-serif);
+  font-size: 22px;
+}
+.mastery-ring__label {
+  font-family: var(--font-sans);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
 
 /* ---- Mastery meter ---- */
 .mastery-meter {
@@ -510,10 +535,17 @@
   z-index: 1;
   background: var(--panel);
 }
+.mastery-seal__glyph {
+  font-size: 13px;
+  line-height: 1;
+}
+/* earned = gilded medallion; glyph is dark ink (#1a1505 — the only permitted
+   literal, matching .btn--primary; passes contrast on every theme's --gold). */
 .mastery-seal--earned {
-  background: var(--gold);
+  background: radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold));
   color: #1a1505;
-  box-shadow: 0 0 12px var(--gold-soft);
+  border: 1px solid var(--gold-line);
+  box-shadow: 0 6px 14px var(--gold-soft);
 }
 .mastery-seal--active {
   border: 2px solid var(--gold);
@@ -522,10 +554,11 @@
 .mastery-seal--available {
   border: 2px solid var(--line-strong);
 }
+/* locked = marble disc + lock glyph (token surface, so light themes aren't islands) */
 .mastery-seal--locked {
+  background: var(--panel-2);
   border: 1px dashed var(--line-strong);
   color: var(--faint);
-  font-size: 11px;
 }
 
 /* ---- Review ---- */
@@ -781,4 +814,110 @@
   color: var(--text);
   font-size: 14px;
   line-height: 1.7;
+}
+
+/* ---- Aurelia atoms: sigil + section divider (token-only) ---- */
+.sigil {
+  color: var(--gold);
+  flex: none;
+}
+.sigil svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 6px 14px var(--gold-soft));
+}
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 6px 0 14px;
+}
+.section-divider__rule {
+  height: 1px;
+  width: 80px;
+  background: linear-gradient(90deg, transparent, var(--gold));
+}
+.section-divider__rule--r {
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+.section-divider__label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* ---- Streak card (token-only) ---- */
+.streak-card {
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  text-align: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+.streak-card__eyebrow {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.streak-card__count {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--text);
+}
+.streak-card__note {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ---- Dashboard cover (empty state) ---- */
+.empty-state--cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 52px 48px;
+}
+.empty-state__wordmark {
+  font-family: var(--font-serif);
+  font-size: 46px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--lamplight);
+  margin-top: 6px;
+}
+
+/* ---- Sidebar brand + streak foot ---- */
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 16px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.sidebar__brand-name {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--lamplight);
+}
+.sidebar__foot {
+  margin-top: auto;
+  padding-top: 16px;
 }

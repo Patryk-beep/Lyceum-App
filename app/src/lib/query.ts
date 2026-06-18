@@ -51,3 +51,11 @@ export function useAnalytics(slug: string) {
   });
 }
 
+export function useStreak() {
+  return useQuery({
+    queryKey: ["streak"],
+    queryFn: api.studyStreak,
+    retry: false,
+  });
+}
+
