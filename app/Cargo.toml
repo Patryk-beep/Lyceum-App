@@ -10,4 +10,6 @@ authors = ["Patryk Szakody <peto.szakodyn@gmail.com>"]
 
 [profile.release]
 strip = true
-lto = true
+# "thin" LTO keeps almost all the size/speed win of full LTO with a far faster
+# (and CI-tractable) final link than `lto = true`.
+lto = "thin"

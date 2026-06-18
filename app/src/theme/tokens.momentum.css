@@ -1,0 +1,49 @@
+/* Momentum — a cooler, higher-contrast dark theme. Fills the same token contract as
+   Night. (App-authored approximation; swap with the real design tokens when synced.) */
+
+:root[data-theme="momentum"] {
+  /* Neutrals */
+  --canvas: #0c0f14;
+  --panel: #141922;
+  --panel-2: #1a2029;
+  --panel-3: #222a36;
+  --lamplight: #eef3fa;
+  --text: #eef3fa;
+  --muted: #98a6bb;
+  --faint: #6b7889;
+  --line: #263040;
+  --line-strong: #34425a;
+
+  /* Accent (electric teal instead of gold) */
+  --gold: #34c6b3;
+  --gold-bright: #4fe0cc;
+  --gold-soft: rgba(52, 198, 179, 0.16);
+  --gold-line: rgba(52, 198, 179, 0.45);
+
+  /* Stage palette */
+  --stage-research: #6aa6ff;
+  --stage-curriculum: #34c6b3;
+  --stage-teach: #9fb0c8;
+  --stage-assign: #f0944e;
+  --stage-assess: #ef6f7b;
+  --stage-review: #54c98a;
+  --stage-capstone: #c79bff;
+
+  --success: #54c98a;
+  --danger: #ef6f7b;
+
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-sans: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --radius-pill: 999px;
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.3);
+
+  --lamp: radial-gradient(
+    1100px 420px at 18% -8%,
+    rgba(52, 198, 179, 0.1),
+    transparent 60%
+  );
+}

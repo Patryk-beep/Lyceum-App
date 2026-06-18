@@ -14,6 +14,8 @@ import "@fontsource/hanken-grotesk/500.css";
 import "@fontsource/hanken-grotesk/600.css";
 import "@fontsource/hanken-grotesk/700.css";
 import "./theme/tokens.night.css";
+import "./theme/tokens.almanac.css";
+import "./theme/tokens.momentum.css";
 import "./theme/primitives.css";
 import "./components/components.css";
 
@@ -26,7 +28,7 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme="night">
+      <ThemeProvider>
         <BrowserRouter>
           <App />
         </BrowserRouter>

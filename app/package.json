@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "bundle:app": "tauri build --bundles app",
     "test": "vitest run",
     "test:watch": "vitest",
     "gen:types": "echo 'ts-rs codegen wired in M2; M0 uses hand-authored bindings + parity test'"

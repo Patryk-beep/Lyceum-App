@@ -26,12 +26,24 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Patryk-beep/Lyceum-App/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEEyMzQ4N0UyN0Q0NDEwRjIKUldUeUVFUjk0b2Mwb2lSR3JNN0U0MWZ6Um5FbE9pamk3djhBb0pSOUd5YVI0Y1JHV3lvUVNTR0wK"
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
     "category": "Education",
     "shortDescription": "Learn any subject to mastery, guided by Claude.",
     "resources": ["resources/lyceum/**/*"],
+    "createUpdaterArtifacts": false,
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

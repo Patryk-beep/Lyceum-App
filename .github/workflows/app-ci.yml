@@ -48,6 +48,7 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: app/pnpm-lock.yaml
+      - run: pnpm config set verify-deps-before-run false
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm build
@@ -78,6 +79,7 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: app/pnpm-lock.yaml
+      - run: pnpm config set verify-deps-before-run false
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: cargo clippy -p lyceum-app --all-targets -- -D warnings

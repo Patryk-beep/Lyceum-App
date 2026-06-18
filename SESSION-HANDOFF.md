@@ -11,11 +11,16 @@ Lyceum-App is an OS-agnostic **Tauri** desktop app (Rust core + React/Vite/TS we
 - Landing page moved to `/site` + Pages Actions workflow; CI workflows added.
 - Running list of autonomous decisions / non-blocking questions kept in **`QUESTIONS-FOR-REVIEW.md`**.
 
-## Build progress (milestone-tested)
-- **M0 DONE** — `app/` Tauri+React+Rust workspace. `lyceum-core` pure engine (manifest model, SRS, mastery, routing, ids, store, progress, summary) — 41 tests. `src-tauri` engine-only commands over a headless-testable service — 5 tests. React Night-theme Dashboard rendering the golden subject — vitest. `golden.json` generated from the model + parity test.
-- **M1 DONE** — `lyceum-engine` Claude `stream-json` bridge: spawn+env-scrub, tolerant parser, session/turn state machine + `--resume` + watchdog, `BridgeEvent`, plugin staging+validation. React LIVE SESSION drawer/console + Diagnostics screen. **Both acceptance gates pass against the real local Claude** (bridge: stream→result, session_id, resume continuity; skill: 9 lyceum skills via `--plugin-dir`, `mcp_servers==[]`, `apiKeySource==none`, quoted MANIFEST.md verbatim). Live test gated by `LYCEUM_LIVE_CLAUDE=1`; offline parser tests use committed fixtures.
-- Spike revised two plan items (see `QUESTIONS-FOR-REVIEW.md` §7–8): **no private `CLAUDE_CONFIG_DIR`** (breaks auth — isolate via `--setting-sources project` + `--strict-mcp-config`); doctor asserts "9 lyceum skills present" not "only lyceum" (bundled Anthropic skills always coexist, inert).
-- **NEXT: M2** — one full vertical slice (`create_subject` + `run_step` cycle, per-subject SessionManager, vendored skill machine-output for `quizzes/*.json`, reload-validator, single-writer dev-assert). Then M3 (breadth), M4 (packaging — cross-OS signing needs your CI runners + certs).
+## Build progress (milestone-tested) — M0–M4 all built & tested
+- **M0 DONE** — `app/` Tauri+React+Rust workspace. `lyceum-core` pure engine (manifest model, SRS, mastery, routing, ids, store, progress, summary). `src-tauri` engine-only commands over a headless-testable service. React Night-theme Dashboard from the golden subject. `golden.json` generated from the model + parity test.
+- **M1 DONE** — `lyceum-engine` Claude `stream-json` bridge: spawn+env-scrub, tolerant parser, session/turn state machine + `--resume` + watchdog, `BridgeEvent`, plugin staging+validation. LIVE SESSION drawer/console + Diagnostics. **Both gates pass vs real Claude** (bridge + skill); live tests gated by `LYCEUM_LIVE_CLAUDE=1`.
+- **M2 DONE** — `run_step` orchestrator + reload-validator + per-subject SessionManager + `create_subject`/`run_subject_step` + deterministic review lane. **Acceptance: the full vertical slice replays deterministically offline** (fake-claude) AND a live orchestrator turn (real Claude Write→reload→validate). Skill machine-output (quizzes/placement-items) patched + mirrored to the source plugin for upstreaming.
+- **M3 DONE** — analytics (reconciled with fixture) + heatmap, deterministic placement adaptive loop + screen, Capstone, Research/Lesson markdown views, multi-subject dashboard routing, onboarding wizard.
+- **M4 DONE (here)** — theme switching (Night/Almanac/Momentum + Settings), **preflight blocking gate** (Claude required, no offline), updater plugin+config, bundle config (mac/win/linux), release + CI matrix workflows. Cross-OS **signed** installers + auto-update + fresh-VM smoke need YOUR runners/certs/keypair — see `QUESTIONS-FOR-REVIEW.md` §11–13.
+- Spike revised two plan items (`QUESTIONS-FOR-REVIEW.md` §7–8): **no private `CLAUDE_CONFIG_DIR`** (breaks auth — isolate via `--setting-sources project` + `--strict-mcp-config`); doctor asserts "9 lyceum skills present" not "only lyceum".
+
+## Test counts (last green run)
+~81 Rust tests (`cargo test --workspace`) + 21 frontend (`pnpm test`) + 2 live (`LYCEUM_LIVE_CLAUDE=1`). clippy `-D warnings` + fmt + tsc + vite build all clean.
 
 ## Toolchain (now installed)
 - `rustup`/`cargo` 1.96, `claude` v2.1.181, `node` v24 / `pnpm`. `app/.npmrc` sets `verify-deps-before-run=false`; `pnpm.onlyBuiltDependencies` allows esbuild + tauri CLI.
