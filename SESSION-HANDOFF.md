@@ -6,15 +6,20 @@
 Lyceum-App is an OS-agnostic **Tauri** desktop app (Rust core + React/Vite/TS webview) that is a GUI over the **Lyceum** learning system (the `lyceum` Claude Code plugin of nine skills). It drives the user's local `claude` as a per-subject `claude -p` stream-json child for generation; a deterministic Rust `lyceum-core` crate owns the mechanics; app + Claude share `learning/<slug>/manifest.json` per subject.
 
 ## Accomplished this session
-- Created the companion repo `Patryk-beep/Lyceum-App` (landing page live at https://patryk-beep.github.io/Lyceum-App/) and cross-linked it with `Patryk-beep/lyceum`.
-- Imported the UI design from the claude.ai/design project **"Skill app design system"** (`Lyceum - Night.dc.html`) via the DesignSync connector.
-- Produced the full implementation plan — **`PLAN.md`** — via a 10-agent design + red-team + synthesis workflow (11 sections + §12 resolved decisions).
-- Answered all 10 open design questions (recorded in `PLAN.md` §12).
+- Produced the full implementation plan — **`PLAN.md`** — via a 10-agent workflow; answered all 10 design questions (`PLAN.md` §12).
+- **Built & tested M0 (scaffold + deterministic engine)** and **M1 (Claude streaming bridge)**. See "Build progress" below.
+- Landing page moved to `/site` + Pages Actions workflow; CI workflows added.
+- Running list of autonomous decisions / non-blocking questions kept in **`QUESTIONS-FOR-REVIEW.md`**.
 
-## Current state
-- Branch `main`. This handoff commit adds `PLAN.md` + this file. Landing page committed earlier (`b472f0b`). **Not pushed** (push only on explicit request).
-- **No application code written yet** — `/app` does not exist. The repo holds the landing page (`index.html`), `PLAN.md`, and this handoff.
-- `rustup`/`cargo` are **not installed** on this machine (needed for M0).
+## Build progress (milestone-tested)
+- **M0 DONE** — `app/` Tauri+React+Rust workspace. `lyceum-core` pure engine (manifest model, SRS, mastery, routing, ids, store, progress, summary) — 41 tests. `src-tauri` engine-only commands over a headless-testable service — 5 tests. React Night-theme Dashboard rendering the golden subject — vitest. `golden.json` generated from the model + parity test.
+- **M1 DONE** — `lyceum-engine` Claude `stream-json` bridge: spawn+env-scrub, tolerant parser, session/turn state machine + `--resume` + watchdog, `BridgeEvent`, plugin staging+validation. React LIVE SESSION drawer/console + Diagnostics screen. **Both acceptance gates pass against the real local Claude** (bridge: stream→result, session_id, resume continuity; skill: 9 lyceum skills via `--plugin-dir`, `mcp_servers==[]`, `apiKeySource==none`, quoted MANIFEST.md verbatim). Live test gated by `LYCEUM_LIVE_CLAUDE=1`; offline parser tests use committed fixtures.
+- Spike revised two plan items (see `QUESTIONS-FOR-REVIEW.md` §7–8): **no private `CLAUDE_CONFIG_DIR`** (breaks auth — isolate via `--setting-sources project` + `--strict-mcp-config`); doctor asserts "9 lyceum skills present" not "only lyceum" (bundled Anthropic skills always coexist, inert).
+- **NEXT: M2** — one full vertical slice (`create_subject` + `run_step` cycle, per-subject SessionManager, vendored skill machine-output for `quizzes/*.json`, reload-validator, single-writer dev-assert). Then M3 (breadth), M4 (packaging — cross-OS signing needs your CI runners + certs).
+
+## Toolchain (now installed)
+- `rustup`/`cargo` 1.96, `claude` v2.1.181, `node` v24 / `pnpm`. `app/.npmrc` sets `verify-deps-before-run=false`; `pnpm.onlyBuiltDependencies` allows esbuild + tauri CLI.
+- Verify locally: `cd app && cargo test --workspace && pnpm test && pnpm build`. Full bridge: `LYCEUM_LIVE_CLAUDE=1 cargo test -p lyceum-engine --test live_bridge`.
 
 ## Locked decisions (full detail in `PLAN.md` §12)
 Raw `claude -p` stream-json subprocess · Tauri v2 · hybrid logic (Rust deterministic / Claude generative) · skills loaded via `--plugin-dir` (NOT `--add-dir`) · `--model claude-opus-4-8` · per-subject isolated session + automatic memory · single global theme (Night) · Claude required (no offline; `preflight()` gates launch) · quota → block + reset banner · backups = ring of 5 timestamped manifests · landing page → `/site` + `pages.yml` · skill machine-output added to the **upstreamable** lyceum skills (not app-only forks).

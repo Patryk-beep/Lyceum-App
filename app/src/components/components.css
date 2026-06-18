@@ -273,3 +273,179 @@
   color: var(--text);
   margin-bottom: 8px;
 }
+
+/* ---- Live session drawer + console ---- */
+.session-drawer {
+  position: fixed;
+  top: 38px;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  z-index: 40;
+}
+.session-drawer__toggle {
+  align-self: flex-start;
+  margin-top: 16px;
+  width: 22px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.session-drawer__pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.session-drawer__pip--running {
+  background: var(--gold);
+  animation: lycPulse 1.4s infinite;
+}
+.session-drawer__pip--done {
+  background: var(--success);
+}
+.session-drawer__pip--error {
+  background: var(--danger);
+}
+.session-drawer__body {
+  width: 360px;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.session-drawer__header {
+  padding: 12px 16px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.session-console {
+  padding: 14px 16px;
+  overflow: auto;
+  flex: 1;
+  font-size: 13.5px;
+}
+.session-console__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.session-console__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.session-console__status--running .session-console__dot {
+  background: var(--gold);
+  animation: lycPulse 1.4s infinite;
+}
+.session-console__status--done .session-console__dot {
+  background: var(--success);
+}
+.session-console__status--error .session-console__dot {
+  background: var(--danger);
+}
+.session-console__init {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 6px 8px;
+  background: var(--panel-2);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+}
+.session-console__thinking pre {
+  white-space: pre-wrap;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--panel-2);
+  padding: 8px;
+  border-radius: var(--radius-sm);
+}
+.session-console__tools {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.session-console__tools li {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  border-left: 2px solid var(--stage-teach);
+  font-size: 12.5px;
+}
+.session-console__tools .tool--active {
+  border-left-color: var(--gold);
+}
+.session-console__text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: var(--lamplight);
+}
+.session-console__error,
+.diag-error {
+  margin-top: 10px;
+  color: var(--danger);
+  font-size: 13px;
+}
+.session-console__warnings {
+  margin-top: 10px;
+  padding-left: 16px;
+  color: var(--stage-assign);
+  font-size: 12px;
+}
+
+/* ---- Diagnostics ---- */
+.diagnostics {
+  max-width: 720px;
+}
+.diagnostics h1 {
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+.diag-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 14px;
+}
+.diag-check__ok {
+  color: var(--success);
+  font-weight: 700;
+}
+.diag-check__bad {
+  color: var(--danger);
+  font-weight: 700;
+}
+.diag-notes {
+  margin-top: 8px;
+  color: var(--stage-assign);
+  font-size: 12.5px;
+}

@@ -1,16 +1,22 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { useSessionSubscription } from "../lib/useSession";
+import { SessionDrawer } from "./SessionDrawer";
+
 const NAV = [
   { to: "/library", label: "Library" },
   { to: "/review", label: "Review" },
   { to: "/today", label: "Today" },
   { to: "/analytics", label: "Analytics" },
+  { to: "/diagnostics", label: "Diagnostics" },
   { to: "/settings", label: "Settings" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
+  useSessionSubscription();
+
   return (
     <div className="app-shell">
       <div className="window-chrome" data-tauri-drag-region>
@@ -35,6 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <main className="content">{children}</main>
+        <SessionDrawer />
       </div>
     </div>
   );

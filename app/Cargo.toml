@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/lyceum-core", "src-tauri"]
+members = ["crates/lyceum-core", "crates/lyceum-engine", "src-tauri"]
 resolver = "2"
 
 [workspace.package]

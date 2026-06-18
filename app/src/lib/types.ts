@@ -27,6 +27,63 @@ export interface WorkspaceInfo {
   subjectCount: number;
 }
 
+export interface PreflightReport {
+  claudeFound: boolean;
+  pluginStaged: boolean;
+  ready: boolean;
+  error: string | null;
+  claudePath: string | null;
+}
+
+export interface DoctorReport {
+  ok: boolean;
+  apiKeySource: string | null;
+  mcpServersEmpty: boolean;
+  lyceumSkills: string[];
+  pluginOk: boolean;
+  resultOk: boolean;
+  sessionId: string | null;
+  notes: string[];
+}
+
+// Mirrors lyceum_engine::BridgeEvent (serde tag "kind", content "data", camelCase).
+export type BridgeEvent =
+  | {
+      kind: "sessionInit";
+      data: {
+        sessionId: string;
+        model: string | null;
+        apiKeySource: string | null;
+        mcpServersEmpty: boolean;
+        lyceumSkills: string[];
+        pluginOk: boolean;
+      };
+    }
+  | { kind: "authWarning"; data: { source: string } }
+  | { kind: "turnStarted"; data: { turnId: number } }
+  | { kind: "textDelta"; data: { turnId: number; block: number; text: string } }
+  | { kind: "thinkingDelta"; data: { turnId: number; block: number; text: string } }
+  | {
+      kind: "toolUseStart";
+      data: { turnId: number; block: number; toolId: string; name: string };
+    }
+  | {
+      kind: "toolUseEnd";
+      data: { turnId: number; block: number; toolId: string; name: string };
+    }
+  | {
+      kind: "turnResult";
+      data: {
+        turnId: number;
+        ok: boolean;
+        stopReason: string | null;
+        text: string;
+        costUsdListPrice: number;
+      };
+    }
+  | { kind: "warning"; data: { message: string } }
+  | { kind: "fatal"; data: { kind: string; message: string } };
+
 // --- Partial manifest shape (enough for views; full type arrives with ts-rs). ---
 
 export interface Objective {

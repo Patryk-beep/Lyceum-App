@@ -69,3 +69,34 @@ _Last updated: 2026-06-18 (during M0)._
 - **A2.** Model pin is `claude-opus-4-8` (locked). For the M1 bridge smoke I'll use
   that. If you'd rather the de-risk spike run on a cheaper model to save the Max
   pool, say so — otherwise I'll keep everything on Opus 4.8 as decided.
+
+---
+
+## M1 spike findings (2026-06-18) — these REVISE the plan's bridge design
+
+I ran the pre-M1 spike against your real `claude` v2.1.181. All required flags
+exist. Two findings change the locked plan and are worth your awareness:
+
+7. **No private `CLAUDE_CONFIG_DIR`.** PLAN §4.1 said to spawn the child with a
+   private `CLAUDE_CONFIG_DIR` to hide your hooks/MCP. **Empirically that breaks
+   auth** — a private config dir returns `Not logged in · Please run /login` (your
+   Max OAuth state lives in/with the default config dir, not purely the Keychain).
+   **Revised:** use the **default** config dir for auth, and isolate via flags:
+   `--setting-sources project` (proven to suppress ALL your global hooks — 0 hook
+   events fired) + `--strict-mcp-config` (proven: `mcp_servers == []`). _This is
+   the working, isolated config._
+
+8. **"Only-lyceum skills" is unachievable, so the doctor assertion is relaxed.**
+   Claude Code ships **bundled skills** (`claude-api`, `deep-research`, `verify`,
+   `debug`, `code-review`, `design-sync`, …) that load on every invocation
+   regardless of config. They are **inert capabilities** — Claude only runs a skill
+   when prompted, so they cannot corrupt a manifest. **Revised doctor gate:** assert
+   (a) all 9 `lyceum:*` skills present, (b) `mcp_servers == []`, (c)
+   `apiKeySource == "none"` (Max pool, not per-token), (d) no hooks fire — NOT
+   "only lyceum". The reload-validator (M2) remains the real corruption guard.
+
+**Both M1 gates passed in the spike:** bridge gate (PONG turn streamed, `result`
+ok, `session_id` captured, `--resume` continued the thread) and skill gate (all 9
+lyceum skills loaded via `--plugin-dir`; Claude read `references/MANIFEST.md` and
+quoted the single-writer rule verbatim — proving genuine `${CLAUDE_PLUGIN_ROOT}`
+resolution). Transcripts saved as `app/tests/fixtures/streams/*.jsonl`.

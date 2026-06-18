@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./components/AppShell";
 import { Dashboard } from "./routes/Dashboard";
+import { Diagnostics } from "./routes/Diagnostics";
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -17,6 +18,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/library" replace />} />
         <Route path="/library" element={<Dashboard />} />
+        <Route path="/diagnostics" element={<Diagnostics />} />
         <Route path="*" element={<Placeholder title="This screen" />} />
       </Routes>
     </AppShell>
