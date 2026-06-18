@@ -1,0 +1,159 @@
+{
+  "subject": "Conversational Spanish",
+  "slug": "conversational-spanish",
+  "created": "2026-06-10",
+  "updated": "2026-06-18",
+  "scale": {
+    "start": 2,
+    "target": 4
+  },
+  "current": {
+    "level": 2,
+    "moduleId": "m02",
+    "phase": "assign",
+    "status": "in-progress"
+  },
+  "placement": {
+    "taken": true,
+    "date": "2026-06-10",
+    "recommendedLevel": 2,
+    "evidence": "floor at L2, ceiling at L3"
+  },
+  "modules": [
+    {
+      "id": "m01",
+      "title": "Sound system & greetings",
+      "level": 1,
+      "prereqs": [],
+      "status": "mastered",
+      "taught": true,
+      "masteryThreshold": 0.9,
+      "objectives": [
+        {
+          "id": "m01-o1",
+          "text": "Produce the five vowel sounds accurately",
+          "bloom": "Apply",
+          "mastery": 0.92,
+          "attempts": 2,
+          "lastAssessed": "2026-06-12"
+        },
+        {
+          "id": "m01-o2",
+          "text": "Exchange formal greetings",
+          "bloom": "Apply",
+          "mastery": 0.9,
+          "attempts": 1,
+          "lastAssessed": "2026-06-12"
+        }
+      ]
+    },
+    {
+      "id": "m02",
+      "title": "Present tense & daily routines",
+      "level": 2,
+      "prereqs": [
+        "m01"
+      ],
+      "status": "in-progress",
+      "taught": true,
+      "masteryThreshold": 0.9,
+      "objectives": [
+        {
+          "id": "m02-o1",
+          "text": "Conjugate regular -ar verbs in present tense",
+          "bloom": "Apply",
+          "mastery": 0.62,
+          "attempts": 1,
+          "lastAssessed": "2026-06-17"
+        }
+      ]
+    },
+    {
+      "id": "m03",
+      "title": "Past tense & storytelling",
+      "level": 2,
+      "prereqs": [
+        "m02"
+      ],
+      "status": "locked",
+      "taught": false,
+      "masteryThreshold": 0.9,
+      "objectives": []
+    }
+  ],
+  "assignments": [
+    {
+      "id": "a02",
+      "moduleId": "m02",
+      "type": "guided-practice",
+      "file": "assignments/02-m02-guided-practice.md",
+      "objectives": [
+        "m02-o1"
+      ],
+      "status": "open"
+    }
+  ],
+  "reviewQueue": [
+    {
+      "itemId": "r001",
+      "prompt": "How do you ask someone's name (formal)?",
+      "answer": "¿Cómo se llama usted?",
+      "moduleId": "m01",
+      "box": 3,
+      "due": "2026-06-18",
+      "lastResult": "pass",
+      "lapses": 0
+    },
+    {
+      "itemId": "r002",
+      "prompt": "Conjugate 'hablar' (yo)",
+      "answer": "hablo",
+      "moduleId": "m02",
+      "box": 1,
+      "due": "2026-06-18",
+      "lapses": 0
+    },
+    {
+      "itemId": "r003",
+      "prompt": "Say 'good morning'",
+      "answer": "buenos días",
+      "moduleId": "m01",
+      "box": 2,
+      "due": "2026-06-17",
+      "lastResult": "pass",
+      "lapses": 1
+    }
+  ],
+  "calibration": {
+    "predictions": 12,
+    "hits": 7,
+    "log": [
+      {
+        "date": "2026-06-17",
+        "predicted": "correct",
+        "actual": "incorrect"
+      }
+    ]
+  },
+  "certification": null,
+  "history": [
+    {
+      "date": "2026-06-12",
+      "skill": "assess-understanding",
+      "event": "graded m01 assignment",
+      "result": "Proficient; m01 mastered"
+    },
+    {
+      "date": "2026-06-17",
+      "skill": "teach-lesson",
+      "event": "delivered m02",
+      "result": "lesson complete; assignment created"
+    }
+  ],
+  "settings": {
+    "scheduler": "leitner",
+    "retentionTarget": 0.9,
+    "sessionLengthMin": 30,
+    "htmlTheme": "night"
+  }
+}

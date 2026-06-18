@@ -1,0 +1,13 @@
+[workspace]
+members = ["crates/lyceum-core", "src-tauri"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT"
+authors = ["Patryk Szakody <peto.szakodyn@gmail.com>"]
+
+[profile.release]
+strip = true
+lto = true

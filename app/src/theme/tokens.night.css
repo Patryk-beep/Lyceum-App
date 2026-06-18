@@ -1,0 +1,55 @@
+/* Night — "after dark by lamplight". The default Lyceum theme.
+   Every component reads these variables; never literal hex. Alternate themes
+   (Almanac, Momentum) drop in by filling this same contract under their own
+   [data-theme] selector. */
+
+:root[data-theme="night"] {
+  /* Neutrals */
+  --canvas: #13110c;
+  --panel: #1c1913;
+  --panel-2: #221e16;
+  --panel-3: #2a251b;
+  --lamplight: #f2ecdc;
+  --text: #f2ecdc;
+  --muted: #b7ad97;
+  --faint: #8c836f;
+  --line: #2e2a20;
+  --line-strong: #3b3527;
+
+  /* Gold accent */
+  --gold: #d8a23e;
+  --gold-bright: #e7b85a;
+  --gold-soft: rgba(216, 162, 62, 0.14);
+  --gold-line: rgba(216, 162, 62, 0.4);
+
+  /* Stage palette (phase -> color) */
+  --stage-research: #7ca0d6;
+  --stage-curriculum: #d8a23e;
+  --stage-teach: #bfb9aa;
+  --stage-assign: #db8a56;
+  --stage-assess: #d17a7a;
+  --stage-review: #6fb089;
+  --stage-capstone: #deb456;
+
+  /* Semantic */
+  --success: #6fb089;
+  --danger: #d17a7a;
+
+  /* Type */
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-sans: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+
+  /* Shape */
+  --radius: 14px;
+  --radius-sm: 9px;
+  --radius-pill: 999px;
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.38);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.28);
+
+  /* Lamp wash used behind hero surfaces */
+  --lamp: radial-gradient(
+    1100px 420px at 18% -8%,
+    rgba(216, 162, 62, 0.1),
+    transparent 60%
+  );
+}

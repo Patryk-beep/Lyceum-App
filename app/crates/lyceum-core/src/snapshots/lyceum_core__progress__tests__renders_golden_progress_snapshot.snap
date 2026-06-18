@@ -1,0 +1,23 @@
+---
+source: crates/lyceum-core/src/progress.rs
+expression: rendered
+---
+# Progress — Conversational Spanish
+
+_Updated 2026-06-18 · Level 2 of target 4 · Status: in-progress_
+
+## Where you are
+- **Current module:** m02 — Present tense & daily routines (L2), phase: assign
+- **Next action:** deliver the lesson for m02
+- **Reviews due today:** 3 (run `review-session`)  ·  **Calibration:** 7/12 correct self-predictions
+
+## Module map
+| Module | Level | Status | Mastery | Taught |
+|---|---|---|---|---|
+| m01 — Sound system & greetings | 1 | mastered | 0.91 | yes |
+| m02 — Present tense & daily routines | 2 | in-progress | 0.62 | yes |
+| m03 — Past tense & storytelling | 2 | locked | — | no |
+
+## Recent history
+- 2026-06-17 · teach-lesson · delivered m02 → lesson complete; assignment created
+- 2026-06-12 · assess-understanding · graded m01 assignment → Proficient; m01 mastered

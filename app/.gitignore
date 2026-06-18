@@ -1,0 +1,17 @@
+# Rust
+/target
+**/*.rs.bk
+
+# Node / Vite
+/node_modules
+/dist
+
+# Tauri generated (icons are committed; gen/ schemas + mobile are generated)
+/src-tauri/gen
+
+# ts-rs generated bindings (regenerated; see gen:types)
+/crates/lyceum-core/bindings
+/src/bindings
+
+# OS
+.DS_Store

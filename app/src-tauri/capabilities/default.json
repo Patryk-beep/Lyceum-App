@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Core capability for the main Lyceum window.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

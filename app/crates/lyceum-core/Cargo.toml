@@ -1,0 +1,25 @@
+[package]
+name = "lyceum-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Deterministic engine for Lyceum-App: manifest model, SRS, mastery gating, routing, ids, progress. Pure (no Tauri/tokio/async)."
+
+[features]
+# Exposes `test_support` (deterministic fixtures) to examples / downstream tests.
+fixtures = []
+
+[[example]]
+name = "gen_golden"
+required-features = ["fixtures"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+time = { version = "0.3", features = ["serde", "macros", "formatting", "parsing"] }
+thiserror = "2"
+sha2 = "0.10"
+
+[dev-dependencies]
+insta = "1"
+tempfile = "3"
