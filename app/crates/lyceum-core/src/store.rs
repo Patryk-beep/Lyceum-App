@@ -7,6 +7,7 @@
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use time::Date;
 
@@ -70,8 +71,8 @@ pub fn save(path: &Path, manifest: &mut Manifest, today: Date, backup_stamp: &st
         f.write_all(b"\n")?;
         f.sync_all()?;
     }
-    // Atomic replace.
-    if let Err(e) = fs::rename(&tmp, path) {
+    // Atomic replace (retried on a transient Windows file lock; see `rename_with_retry`).
+    if let Err(e) = rename_with_retry(&tmp, path) {
         // Never leave a stray .tmp behind on failure.
         let _ = fs::remove_file(&tmp);
         return Err(e.into());
@@ -88,6 +89,40 @@ fn tmp_path(path: &Path) -> PathBuf {
     let mut s = path.as_os_str().to_owned();
     s.push(".tmp");
     PathBuf::from(s)
+}
+
+/// Raw OS error codes for a transient Windows file lock: `ERROR_SHARING_VIOLATION`
+/// (32) / `ERROR_ACCESS_DENIED` (5). Pure mapping so it unit-tests on any host.
+fn is_lock_errno(code: Option<i32>) -> bool {
+    matches!(code, Some(32) | Some(5))
+}
+
+/// Whether to retry a rename for this error. **Only on Windows** — on Unix those raw
+/// codes mean EPIPE/EIO and MUST NOT trigger a retry, so macOS/Linux behave exactly
+/// like the bare `fs::rename` (no behavior change).
+fn transient_lock(e: &std::io::Error) -> bool {
+    cfg!(windows) && is_lock_errno(e.raw_os_error())
+}
+
+const RENAME_RETRIES: u32 = 10;
+
+/// `fs::rename` with a bounded backoff retry on a transient Windows lock (antivirus /
+/// Search indexer / the Claude child briefly holding `manifest.json` open). Worst case
+/// is well under ~1s; a non-lock error returns immediately, and on Unix `transient_lock`
+/// is always false so this is a plain `fs::rename`.
+fn rename_with_retry(from: &Path, to: &Path) -> std::io::Result<()> {
+    let mut delay = Duration::from_millis(10);
+    for attempt in 0..RENAME_RETRIES {
+        match fs::rename(from, to) {
+            Ok(()) => return Ok(()),
+            Err(e) if attempt + 1 < RENAME_RETRIES && transient_lock(&e) => {
+                std::thread::sleep(delay);
+                delay = (delay * 2).min(Duration::from_millis(250));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+    unreachable!("the final iteration always returns")
 }
 
 fn backups_dir(path: &Path) -> PathBuf {
@@ -167,6 +202,32 @@ mod tests {
         let dir = backups_dir(&path);
         let count = fs::read_dir(&dir).unwrap().count();
         assert_eq!(count, BACKUP_RING);
+    }
+
+    #[test]
+    fn lock_errno_classification() {
+        assert!(is_lock_errno(Some(32))); // ERROR_SHARING_VIOLATION
+        assert!(is_lock_errno(Some(5))); // ERROR_ACCESS_DENIED
+        assert!(!is_lock_errno(Some(28))); // ENOSPC — never a lock
+        assert!(!is_lock_errno(None));
+    }
+
+    #[test]
+    fn rename_with_retry_succeeds_immediately() {
+        let tmp = tempfile::tempdir().unwrap();
+        let from = tmp.path().join("a");
+        let to = tmp.path().join("b");
+        fs::write(&from, b"x").unwrap();
+        rename_with_retry(&from, &to).unwrap();
+        assert!(to.exists() && !from.exists());
+    }
+
+    #[test]
+    fn rename_with_retry_errs_for_missing_source() {
+        let tmp = tempfile::tempdir().unwrap();
+        // Missing source is not a transient lock → returns Err promptly (immediate on Unix).
+        let err = rename_with_retry(&tmp.path().join("nope"), &tmp.path().join("dst"));
+        assert!(err.is_err());
     }
 
     #[test]

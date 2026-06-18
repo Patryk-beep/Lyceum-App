@@ -3,8 +3,39 @@
 //! before it is handed to `--plugin-dir`.
 
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use crate::error::{EngineError, Result};
+
+/// Raw OS error codes for a transient Windows file lock: `ERROR_SHARING_VIOLATION`
+/// (32) / `ERROR_ACCESS_DENIED` (5). (Duplicated from `lyceum-core::store` — kept local
+/// rather than widening that crate's public API with a generic fs util.)
+fn is_lock_errno(code: Option<i32>) -> bool {
+    matches!(code, Some(32) | Some(5))
+}
+
+/// Retry a rename only on Windows; on Unix these codes mean EPIPE/EIO and must not
+/// retry, so behavior is unchanged off-Windows.
+fn transient_lock(e: &std::io::Error) -> bool {
+    cfg!(windows) && is_lock_errno(e.raw_os_error())
+}
+
+/// `fs::rename` with a bounded backoff retry on a transient Windows lock (antivirus /
+/// indexer holding a just-copied plugin file). Plain `fs::rename` on Unix.
+fn rename_with_retry(from: &Path, to: &Path) -> std::io::Result<()> {
+    let mut delay = Duration::from_millis(10);
+    for attempt in 0..10u32 {
+        match std::fs::rename(from, to) {
+            Ok(()) => return Ok(()),
+            Err(e) if attempt + 1 < 10 && transient_lock(&e) => {
+                std::thread::sleep(delay);
+                delay = (delay * 2).min(Duration::from_millis(250));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+    unreachable!("the final iteration always returns")
+}
 
 pub const LYCEUM_SKILLS: &[&str] = &[
     "assess-understanding",
@@ -58,7 +89,7 @@ pub fn stage_plugin(src: &Path, dest_dir: &Path) -> Result<PathBuf> {
     if staged.exists() {
         std::fs::remove_dir_all(&staged)?;
     }
-    std::fs::rename(&tmp, &staged)
+    rename_with_retry(&tmp, &staged)
         .map_err(|e| EngineError::Staging(format!("swap into place: {e}")))?;
     Ok(staged)
 }
