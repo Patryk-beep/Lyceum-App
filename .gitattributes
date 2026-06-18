@@ -1,0 +1,8 @@
+# Keep the bundled lyceum plugin (the `--plugin-dir` payload Claude reads at runtime)
+# at LF on every platform, so a Windows checkout with core.autocrlf=true can't rewrite
+# SKILL.md / MANIFEST.md line endings and break `${CLAUDE_PLUGIN_ROOT}` reference parsing.
+app/src-tauri/resources/lyceum/** text eol=lf
+
+# Installer scripts must keep their native line endings regardless of platform.
+*.sh text eol=lf
+*.ps1 text eol=crlf

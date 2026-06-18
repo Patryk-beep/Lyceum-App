@@ -1,3 +1,8 @@
 [toolchain]
+# "stable" is well past 1.77.2, which carries the CVE-2024-24576 (BatBadBut) fix that
+# makes spawning a Windows `claude.cmd` shim safe. Do not pin below that floor.
 channel = "stable"
 components = ["rustfmt", "clippy"]
+# Lets `cargo check --target x86_64-pc-windows-msvc` type-check the cfg(windows) bridge
+# from a non-Windows host without a manual `rustup target add`.
+targets = ["x86_64-pc-windows-msvc"]

@@ -84,3 +84,22 @@ jobs:
       - run: pnpm build
       - run: cargo clippy -p lyceum-app --all-targets -- -D warnings
       - run: cargo test -p lyceum-app
+
+  windows:
+    name: bridge (Windows compile + cfg(windows) tests)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      # Real Windows compile of the cfg(windows) resolver/spawn path + its tests — the
+      # only place build_command / the .cmd spawn path is actually linked. No GUI needed.
+      - run: cargo test -p lyceum-core -p lyceum-engine
+      - run: cargo clippy -p lyceum-engine --all-targets -- -D warnings
