@@ -1,0 +1,92 @@
+/* Aurelia Dark — "a gilded curriculum": deep indigo by candle-gold, glassmorphic.
+   Imported from the claude.ai/design project (Lyceum - Aurelia Dark.dc.html).
+   Fills the same token contract as Night; the glass + atmosphere below are scoped
+   to [data-theme="aurelia-dark"] so the other themes are untouched. */
+
+:root[data-theme="aurelia-dark"] {
+  /* Neutrals — translucent panels float over the atmosphere (glass). */
+  --canvas: #15121e;
+  --panel: rgba(40, 34, 54, 0.55);
+  --panel-2: rgba(26, 22, 38, 0.62);
+  --panel-3: rgba(46, 39, 70, 0.55);
+  --lamplight: #ece4d6;
+  --text: #c7c0d0;
+  --muted: #9e96ac;
+  --faint: #7c7490;
+  --line: rgba(231, 224, 240, 0.09);
+  --line-strong: rgba(231, 224, 240, 0.16);
+
+  /* Gilt accent */
+  --gold: #c49a5c;
+  --gold-bright: #e8cb96;
+  --gold-soft: rgba(216, 181, 126, 0.16);
+  --gold-line: rgba(196, 154, 92, 0.45);
+
+  /* The seven orders (stage palette) */
+  --stage-research: #7e9bc4;
+  --stage-curriculum: #c49a5c;
+  --stage-teach: #c9a6a0;
+  --stage-assign: #8fae9b;
+  --stage-assess: #8e7ba6;
+  --stage-review: #7fb0b0;
+  --stage-capstone: #d8b57e;
+
+  --success: #7fb0b0;
+  --danger: #c9a6a0;
+
+  /* Type — Roman serif + a quiet geometric sans */
+  --font-serif: "EB Garamond", Georgia, "Times New Roman", serif;
+  --font-sans: "Jost", system-ui, -apple-system, sans-serif;
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 8px 22px rgba(0, 0, 0, 0.18);
+
+  --lamp: radial-gradient(
+    1100px 420px at 18% -8%,
+    rgba(216, 193, 140, 0.16),
+    transparent 60%
+  );
+}
+
+/* The fixed "celestial" atmosphere: gilt + amethyst + slate washes over the
+   indigo gradient, with a faint stipple. */
+:root[data-theme="aurelia-dark"] body {
+  background-color: #181426;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.03) 0.5px, transparent 0.7px),
+    radial-gradient(1100px 680px at 50% -8%, rgba(216, 193, 140, 0.16), transparent 62%),
+    radial-gradient(900px 760px at 84% 26%, rgba(150, 135, 180, 0.13), transparent 60%),
+    radial-gradient(900px 800px at 12% 82%, rgba(150, 178, 206, 0.14), transparent 60%),
+    linear-gradient(180deg, #15121e 0%, #181426 48%, #1c1726 100%);
+  background-size: 3px 3px, auto, auto, auto, auto;
+  background-attachment: fixed;
+}
+
+/* Glass: translucent surfaces get a backdrop blur so the atmosphere reads through. */
+:root[data-theme="aurelia-dark"] .card,
+:root[data-theme="aurelia-dark"] .sidebar,
+:root[data-theme="aurelia-dark"] .resume-hero,
+:root[data-theme="aurelia-dark"] .session-drawer__body,
+:root[data-theme="aurelia-dark"] .stat,
+:root[data-theme="aurelia-dark"] .settings__theme,
+:root[data-theme="aurelia-dark"] .wizard__input {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Headings carry the warm ivory; the wordmark gleams gilt. */
+:root[data-theme="aurelia-dark"] h1,
+:root[data-theme="aurelia-dark"] h2,
+:root[data-theme="aurelia-dark"] h3 {
+  color: var(--lamplight);
+  font-weight: 600;
+}
+:root[data-theme="aurelia-dark"] .window-chrome__brand {
+  background: linear-gradient(180deg, #e8cb96, #a87c3c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

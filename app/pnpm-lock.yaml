@@ -8,8 +8,14 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/eb-garamond':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@fontsource/hanken-grotesk':
         specifier: ^5.1.0
+        version: 5.2.8
+      '@fontsource/jost':
+        specifier: ^5.2.8
         version: 5.2.8
       '@fontsource/newsreader':
         specifier: ^5.1.0
@@ -334,8 +340,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@fontsource/eb-garamond@5.2.7':
+    resolution: {integrity: sha512-V42tTlHDbnDo0+lENnXKWMx63Llq6Gfl2l7ozkoeRQN60S0jm6hEgCLlOT/5YyKAN9QZ0e2ofpy0rGKlz9jBrw==}
+
   '@fontsource/hanken-grotesk@5.2.8':
     resolution: {integrity: sha512-J/e6hdfNCbyc4WK5hmZtk0zjaIsFx3pvCdPVxY25iYw2C9v1ZggGz4nfHnRjMhcz4WfaadUuwLNtvj8sQ70tkg==}
+
+  '@fontsource/jost@5.2.8':
+    resolution: {integrity: sha512-PEK7oGJL8r+YZm6BriWhmCql9DhVYTMt0iEQbZHo8mqfIPIZo67Tm68xEIaRA0yB3wsHA7Tm66yMQDIxq3Bjqw==}
 
   '@fontsource/newsreader@5.2.10':
     resolution: {integrity: sha512-TFaYzoFhDqarUyV2yYjgZZEwT4bpaj6sGBnXSnFknQ/QB8/9LzfY6IO9+inHOX4zzPp87Z7/KuG1OI5gr91Q3A==}
@@ -1751,7 +1763,11 @@ snapshots:
   '@esbuild/win32-x64@0.21.5':
     optional: true
 
+  '@fontsource/eb-garamond@5.2.7': {}
+
   '@fontsource/hanken-grotesk@5.2.8': {}
+
+  '@fontsource/jost@5.2.8': {}
 
   '@fontsource/newsreader@5.2.10': {}
 

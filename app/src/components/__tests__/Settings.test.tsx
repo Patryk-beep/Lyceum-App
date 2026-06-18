@@ -18,5 +18,8 @@ describe("Settings", () => {
 
     await user.click(screen.getByTestId("theme-momentum"));
     expect(useThemeStore.getState().theme).toBe("momentum");
+
+    await user.click(screen.getByTestId("theme-aurelia-dark"));
+    expect(useThemeStore.getState().theme).toBe("aurelia-dark");
   });
 });

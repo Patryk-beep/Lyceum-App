@@ -1,17 +1,19 @@
 import { create } from "zustand";
 
-export type ThemeName = "night" | "almanac" | "momentum";
+export type ThemeName = "aurelia-dark" | "night" | "almanac" | "momentum";
 
 const KEY = "lyceum-theme";
+const THEMES: ThemeName[] = ["aurelia-dark", "night", "almanac", "momentum"];
+const DEFAULT_THEME: ThemeName = "aurelia-dark";
 
 function load(): ThemeName {
   try {
     const v = localStorage.getItem(KEY);
-    if (v === "night" || v === "almanac" || v === "momentum") return v;
+    if (v && (THEMES as string[]).includes(v)) return v as ThemeName;
   } catch {
     /* no localStorage (e.g. SSR/test) */
   }
-  return "night";
+  return DEFAULT_THEME;
 }
 
 interface ThemeState {

@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useThemeStore, type ThemeName } from "../stores/useThemeStore";
 
 const THEMES: { key: ThemeName; label: string; hint: string }[] = [
-  { key: "night", label: "Night", hint: "after dark by lamplight (default)" },
+  { key: "aurelia-dark", label: "Aurelia Dark", hint: "gilded indigo by candle-gold (default)" },
+  { key: "night", label: "Night", hint: "after dark by lamplight" },
   { key: "almanac", label: "Almanac", hint: "warm parchment, daylight" },
   { key: "momentum", label: "Momentum", hint: "cool, high-contrast" },
 ];

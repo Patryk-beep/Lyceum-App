@@ -13,9 +13,20 @@ import "@fontsource/hanken-grotesk/400.css";
 import "@fontsource/hanken-grotesk/500.css";
 import "@fontsource/hanken-grotesk/600.css";
 import "@fontsource/hanken-grotesk/700.css";
+// Aurelia Dark — EB Garamond (serif, incl. italic) + Jost (geometric sans)
+import "@fontsource/eb-garamond/400.css";
+import "@fontsource/eb-garamond/500.css";
+import "@fontsource/eb-garamond/600.css";
+import "@fontsource/eb-garamond/400-italic.css";
+import "@fontsource/eb-garamond/500-italic.css";
+import "@fontsource/jost/300.css";
+import "@fontsource/jost/400.css";
+import "@fontsource/jost/500.css";
+import "@fontsource/jost/600.css";
 import "./theme/tokens.night.css";
 import "./theme/tokens.almanac.css";
 import "./theme/tokens.momentum.css";
+import "./theme/tokens.aurelia-dark.css";
 import "./theme/primitives.css";
 import "./components/components.css";
 
