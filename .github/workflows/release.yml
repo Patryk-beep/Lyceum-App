@@ -115,27 +115,50 @@ jobs:
             echo "::notice::TAURI_SIGNING_PRIVATE_KEY unset — building WITHOUT updater artifacts (unsigned release)."
           fi
 
+      # Export the Apple code-signing vars to the job env ONLY when a real certificate
+      # is configured. Passing an EMPTY APPLE_CERTIFICATE makes tauri-bundler attempt
+      # `security import` on empty data ("SecKeychainItemImport: parameters not valid")
+      # and FAIL the macOS bundle. ABSENT (not empty) → the bundler ad-hoc signs via
+      # tauri.conf.json signingIdentity "-", which is exactly what the unsigned phase wants.
+      - name: Configure Apple code-signing when a certificate is set
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_PATH: ${{ secrets.APPLE_API_KEY_PATH }}
+        run: |
+          if [ -n "$APPLE_CERTIFICATE" ]; then
+            {
+              echo "APPLE_CERTIFICATE<<__LYCEUM_EOF__"; echo "$APPLE_CERTIFICATE"; echo "__LYCEUM_EOF__"
+              echo "APPLE_CERTIFICATE_PASSWORD=$APPLE_CERTIFICATE_PASSWORD"
+              echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY"
+              echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD"
+              echo "APPLE_API_ISSUER=$APPLE_API_ISSUER"
+              echo "APPLE_API_KEY<<__LYCEUM_EOF__"; echo "$APPLE_API_KEY"; echo "__LYCEUM_EOF__"
+              echo "APPLE_API_KEY_PATH=$APPLE_API_KEY_PATH"
+            } >> "$GITHUB_ENV"
+            echo "::notice::APPLE_CERTIFICATE present — macOS bundle will be Developer-ID signed/notarized."
+          else
+            echo "::notice::No APPLE_CERTIFICATE — macOS bundle stays ad-hoc signed (signingIdentity '-')."
+          fi
+
       # Builds the bundles and UPLOADS them to the pre-created draft (releaseId).
       # No tagName/releaseDraft here — the create-release job owns the release.
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Updater signing (no-op when unset → see the step above).
+          # Updater signing (no-op when unset → see the updater step above).
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          # macOS Developer ID + notarization. tauri-action SKIPS macOS signing when
-          # APPLE_CERTIFICATE is empty, so the bundle stays ad-hoc-signed (config "-").
-          # When set, APPLE_SIGNING_IDENTITY overrides the ad-hoc "-" with the real cert.
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-          # Notarization via an App Store Connect API key (.p8) — preferred over APPLE_ID/password.
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_PATH: ${{ secrets.APPLE_API_KEY_PATH }}
-          # Windows signing: set bundle.windows.signCommand (e.g. trusted-signing-cli) in a
-          # release-only --config once you have a cert, and pass these. Empty → unsigned (SmartScreen).
+          # Apple signing vars are injected into $GITHUB_ENV by the step above ONLY when a
+          # certificate is configured — NEVER passed empty here (empty breaks the bundle).
+          # Windows signing: set bundle.windows.signCommand in a release-only --config once
+          # you have a cert, then pass these. Empty → unsigned (SmartScreen) — proven harmless.
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
