@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -62,6 +62,25 @@ describe("DashboardView", () => {
     expect(screen.getByText(/run the capstone/)).toBeInTheDocument();
     // total reviews due = 3 + 0 + 2 = 5
     expect(screen.getByTestId("review-due")).toHaveTextContent("5");
+  });
+
+  it("deletes via the card trash button (with the slug) without triggering open", () => {
+    const onDeleteSubject = vi.fn();
+    const onOpenSubject = vi.fn();
+    renderView(
+      <DashboardView
+        subjects={[goldenSummary]}
+        onDeleteSubject={onDeleteSubject}
+        onOpenSubject={onOpenSubject}
+      />,
+    );
+    const card = screen.getAllByTestId("subject-card")[0];
+    within(card)
+      .getByRole("button", { name: /delete conversational spanish/i })
+      .click();
+    expect(onDeleteSubject).toHaveBeenCalledWith("conversational-spanish");
+    // stopPropagation: the card's own open handler must NOT fire.
+    expect(onOpenSubject).not.toHaveBeenCalled();
   });
 
   it("shows the empty state with a seed button when no subjects exist", () => {

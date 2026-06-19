@@ -80,6 +80,42 @@ pub fn read_artifact(state: State<AppState>, slug: String, relpath: String) -> A
 }
 
 #[tauri::command]
+pub fn list_lessons(
+    state: State<AppState>,
+    slug: String,
+) -> AppResult<Vec<crate::delete::LessonEntry>> {
+    crate::delete::list_lessons(&state.workspace, &slug)
+}
+
+/// Delete a lesson file and re-open the named module (authoritative id from
+/// `list_lessons`) so the next step re-teaches it. Mastery/reviews are kept.
+#[tauri::command]
+pub fn delete_lesson(
+    state: State<AppState>,
+    slug: String,
+    module_id: String,
+    file: String,
+) -> AppResult<crate::delete::DeleteLessonResult> {
+    crate::delete::delete_lesson(
+        &state.workspace,
+        &slug,
+        &module_id,
+        &file,
+        workspace::today(),
+    )
+}
+
+/// Delete an assignment (manifest entry + file) and realign the current phase.
+#[tauri::command]
+pub fn delete_assignment(
+    state: State<AppState>,
+    slug: String,
+    assignment_id: String,
+) -> AppResult<Manifest> {
+    crate::delete::delete_assignment(&state.workspace, &slug, &assignment_id, workspace::today())
+}
+
+#[tauri::command]
 pub fn placement_pool(
     state: State<AppState>,
     slug: String,

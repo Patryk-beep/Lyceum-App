@@ -1,11 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import { ConfirmDestructive } from "../components/ConfirmDestructive";
 import { MasterySeal, type SealState } from "../components/MasterySeal";
 import { MasteryMeter } from "../components/MasteryMeter";
 import { api } from "../lib/ipc";
-import { useManifest } from "../lib/query";
+import { useManifest, useResetCurriculum } from "../lib/query";
 import type { Manifest, Module } from "../lib/types";
 import { useEngineStore } from "../stores/useEngineStore";
 
@@ -54,6 +56,8 @@ export function RoadmapView({
       <div className="roadmap__subnav">
         <Link to={`/subject/${manifest.slug}/research`}>Research</Link>
         <Link to={`/subject/${manifest.slug}/placement`}>Placement</Link>
+        <Link to={`/subject/${manifest.slug}/lessons`}>Lessons</Link>
+        <Link to={`/subject/${manifest.slug}/assignments`}>Assignments</Link>
         <Link to={`/subject/${manifest.slug}/analytics`}>Analytics</Link>
         <Link to={`/subject/${manifest.slug}/capstone`}>Capstone</Link>
       </div>
@@ -105,6 +109,8 @@ export function Roadmap() {
   const qc = useQueryClient();
   const { data: manifest, isLoading, error } = useManifest(slug);
   const engineStart = useEngineStore((s) => s.start);
+  const reset = useResetCurriculum(slug);
+  const [confirmingReset, setConfirmingReset] = useState(false);
 
   const step = useMutation({
     mutationFn: () => api.runSubjectStep(slug),
@@ -113,6 +119,7 @@ export function Roadmap() {
       qc.invalidateQueries({ queryKey: ["manifest", slug] });
       qc.invalidateQueries({ queryKey: ["subjects"] });
       qc.invalidateQueries({ queryKey: ["review", slug] });
+      qc.invalidateQueries({ queryKey: ["analytics", slug] });
     },
   });
 
@@ -121,10 +128,41 @@ export function Roadmap() {
     return <div className="muted">Could not load subject: {String(error)}</div>;
 
   return (
-    <RoadmapView
-      manifest={manifest}
-      onRunStep={() => step.mutate()}
-      running={step.isPending}
-    />
+    <>
+      <RoadmapView
+        manifest={manifest}
+        onRunStep={() => step.mutate()}
+        running={step.isPending}
+      />
+      <div className="danger-zone">
+        <div className="danger-zone__label">Danger zone</div>
+        <button
+          className="btn btn--outline"
+          style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
+          onClick={() => setConfirmingReset(true)}
+        >
+          Reset curriculum
+        </button>
+      </div>
+      {confirmingReset && (
+        <ConfirmDestructive
+          title={`Reset the curriculum for “${manifest.subject}”?`}
+          body="This deletes all modules and assignments and re-builds from scratch on the next step. Your spaced-review schedule is kept but unlinked from the old modules."
+          danger="Mastery scores in those modules are lost. This cannot be undone."
+          confirmWord={manifest.slug}
+          confirmLabel="Reset curriculum"
+          busy={reset.isPending}
+          onCancel={() => setConfirmingReset(false)}
+          onConfirm={() =>
+            reset.mutate(undefined, {
+              onSuccess: () => {
+                useEngineStore.getState().reset();
+                setConfirmingReset(false);
+              },
+            })
+          }
+        />
+      )}
+    </>
   );
 }

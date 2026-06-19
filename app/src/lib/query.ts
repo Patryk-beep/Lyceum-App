@@ -59,3 +59,66 @@ export function useStreak() {
   });
 }
 
+export function useLessons(slug: string) {
+  return useQuery({
+    queryKey: ["lessons", slug],
+    queryFn: () => api.listLessons(slug),
+    enabled: !!slug,
+  });
+}
+
+/** Delete a whole subject. Drops every per-subject cache so nothing renders stale. */
+export function useDeleteSubject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (slug: string) => api.deleteSubject(slug),
+    onSuccess: (_d, slug) => {
+      qc.invalidateQueries({ queryKey: ["subjects"] });
+      qc.invalidateQueries({ queryKey: ["workspace"] });
+      qc.invalidateQueries({ queryKey: ["streak"] });
+      for (const key of ["manifest", "review", "analytics", "lessons"]) {
+        qc.removeQueries({ queryKey: [key, slug] });
+      }
+    },
+  });
+}
+
+export function useDeleteLesson(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ moduleId, file }: { moduleId: string; file: string }) =>
+      api.deleteLesson(slug, moduleId, file),
+    onSuccess: (_d, { file }) => {
+      qc.removeQueries({ queryKey: ["artifact", slug, `lessons/${file}`] });
+      for (const key of ["manifest", "lessons", "analytics", "review"]) {
+        qc.invalidateQueries({ queryKey: [key, slug] });
+      }
+      qc.invalidateQueries({ queryKey: ["subjects"] });
+    },
+  });
+}
+
+export function useDeleteAssignment(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (assignmentId: string) => api.deleteAssignment(slug, assignmentId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["manifest", slug] });
+      qc.invalidateQueries({ queryKey: ["subjects"] });
+    },
+  });
+}
+
+export function useResetCurriculum(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.resetCurriculum(slug),
+    onSuccess: () => {
+      for (const key of ["manifest", "review", "analytics", "lessons"]) {
+        qc.invalidateQueries({ queryKey: [key, slug] });
+      }
+      qc.invalidateQueries({ queryKey: ["subjects"] });
+    },
+  });
+}
+

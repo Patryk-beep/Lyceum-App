@@ -363,10 +363,8 @@ mod streak_tests {
 /// Read a subject artifact (lesson/research/curriculum/capstone markdown or json).
 /// Rejects path traversal — the relative path must stay inside the subject folder.
 pub fn read_artifact(ws: &Path, slug: &str, relpath: &str) -> AppResult<String> {
-    if relpath.contains("..") || relpath.starts_with('/') || relpath.starts_with('\\') {
-        return Err(AppError::msg("illegal artifact path"));
-    }
-    let path = workspace::subject_dir(ws, slug).join(relpath);
+    // Reuse the hardened containment guard (rejects `..`, absolute, drive-prefix).
+    let path = crate::delete::contained_path(ws, slug, relpath)?;
     std::fs::read_to_string(&path).map_err(|e| AppError::msg(format!("{}: {e}", path.display())))
 }
 

@@ -2,6 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 
 import type {
   AnalyticsReport,
+  DeleteLessonResult,
+  LessonEntry,
   Manifest,
   PlacementPool,
   PlacementState,
@@ -41,4 +43,14 @@ export const api = {
     invoke<PlacementState>("placement_step", { answers }),
   placementFinalize: (slug: string, level: number, evidence: string) =>
     invoke<Manifest>("placement_finalize", { slug, level, evidence }),
+  listLessons: (slug: string) => invoke<LessonEntry[]>("list_lessons", { slug }),
+  // moduleId is the authoritative id resolved by listLessons (backend never
+  // re-parses the filename); pass "" when a lesson maps to no module.
+  deleteLesson: (slug: string, moduleId: string, file: string) =>
+    invoke<DeleteLessonResult>("delete_lesson", { slug, moduleId, file }),
+  deleteAssignment: (slug: string, assignmentId: string) =>
+    invoke<Manifest>("delete_assignment", { slug, assignmentId }),
+  deleteSubject: (slug: string) => invoke<void>("delete_subject", { slug }),
+  resetCurriculum: (slug: string) =>
+    invoke<Manifest>("reset_curriculum", { slug }),
 };

@@ -1,5 +1,7 @@
 //! Tauri commands for the Claude bridge. Events stream on `claude://session`.
 
+use std::time::Duration;
+
 use tauri::{AppHandle, Emitter, State};
 
 use lyceum_core::model::Manifest;
@@ -100,7 +102,8 @@ pub async fn create_subject(
     // quizzes) deterministically, so later skills find their folders regardless of
     // what the headless `learn` turn writes.
     let subject_dir = workspace::subject_dir(&state.workspace, &slug);
-    crate::service::scaffold_subject_dirs(&subject_dir).map_err(|e| AppError::msg(e.to_string()))?;
+    crate::service::scaffold_subject_dirs(&subject_dir)
+        .map_err(|e| AppError::msg(e.to_string()))?;
 
     let start_clause = if start.eq_ignore_ascii_case("test") {
         "run a placement test to decide the starting level (scale.start = \"test\")".to_string()
@@ -197,6 +200,11 @@ pub async fn run_subject_step(
     };
 
     let mut sessions = state.sessions.lock().await;
+    // The subject may have been deleted while this step waited on the lock — don't
+    // spawn a zombie session pointing at a removed workspace.
+    if !workspace::manifest_path(&state.workspace, &slug).is_file() {
+        return Err(AppError::msg("subject was deleted"));
+    }
     if !sessions.contains_key(&slug) {
         let session = ClaudeSession::spawn(&cfg)
             .await
@@ -229,4 +237,33 @@ pub async fn run_subject_step(
         manifest: report.manifest,
         next_action,
     })
+}
+
+/// Delete an entire subject: shut down its warm `claude` child (if any), then
+/// remove `learning/<slug>/`. Lives here (not in `commands`) because it touches
+/// the tokio session map. The lock is acquired FIRST and held across the whole
+/// op so an in-flight step for this slug finishes and no step can re-insert a
+/// zombie session pointing at the deleted dir.
+#[tauri::command]
+pub async fn delete_subject(state: State<'_, AppState>, slug: String) -> AppResult<()> {
+    crate::delete::validate_slug(&slug)?;
+    let mut sessions = state.sessions.lock().await;
+    if let Some(session) = sessions.remove(&slug) {
+        // Bound the shutdown so a wedged child can't hang the global lock; the OS
+        // reaps the orphan on app exit. ponytail: 5s timeout, forceful-kill later.
+        let _ = tokio::time::timeout(Duration::from_secs(5), session.shutdown()).await;
+    }
+    crate::delete::delete_subject_dir(&state.workspace, &slug)
+    // `sessions` lock drops here, after the dir is gone.
+}
+
+/// Reset a subject's curriculum: wipe modules/assignments, rewind `current.*`,
+/// keep the (unlinked) review schedule, and delete `curriculum.json` so the next
+/// step re-routes to build-curriculum. Async + session-locked because it deletes
+/// a routing sentinel a same-slug build-curriculum turn writes.
+#[tauri::command]
+pub async fn reset_curriculum(state: State<'_, AppState>, slug: String) -> AppResult<Manifest> {
+    crate::delete::validate_slug(&slug)?;
+    let _sessions = state.sessions.lock().await; // serialize vs build-curriculum
+    crate::delete::reset_curriculum(&state.workspace, &slug, workspace::today())
 }

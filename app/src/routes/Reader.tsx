@@ -1,6 +1,9 @@
-import { useParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { ArtifactView } from "../components/ArtifactView";
+import { ConfirmDestructive } from "../components/ConfirmDestructive";
+import { useDeleteLesson, useLessons } from "../lib/query";
 
 /** /subject/:slug/research */
 export function Research() {
@@ -15,9 +18,78 @@ export function Research() {
 /** /subject/:slug/lesson/:file — `file` is the lesson filename under lessons/. */
 export function Lesson() {
   const { slug = "", file = "" } = useParams();
+  const navigate = useNavigate();
+  const { data: lessons } = useLessons(slug);
+  const del = useDeleteLesson(slug);
+  const [confirming, setConfirming] = useState(false);
+
+  // useParams already decodes the route segment; the Lessons list encodes it.
+  const row = lessons?.find((l) => l.file === file);
+  const moduleId = row?.moduleId ?? null;
+  const mastered = row?.moduleStatus === "mastered";
+
   return (
     <div className="reader-screen">
+      <div className="reader__header">
+        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 20 }}>Lesson</h1>
+        <button
+          className="btn btn--ghost"
+          style={{ color: "var(--danger)" }}
+          onClick={() => setConfirming(true)}
+        >
+          Delete lesson
+        </button>
+      </div>
+      {del.isError && (
+        <div className="muted" style={{ color: "var(--danger)", marginBottom: 10 }}>
+          Could not delete: {String(del.error)}
+        </div>
+      )}
       <ArtifactView slug={slug} relpath={`lessons/${file}`} title="Lesson" />
+
+      {confirming && (
+        <ConfirmDestructive
+          title="Delete this lesson?"
+          body={
+            moduleId
+              ? "The lesson file is removed and its module is re-opened — the next step will re-deliver the lesson. Your mastery scores are kept. Existing reviews are not removed."
+              : "This lesson isn’t tied to a module, so the file is just removed (re-teach can’t be armed)."
+          }
+          danger={
+            mastered
+              ? "This module is already mastered — re-teaching may change your mastery score when you next submit work."
+              : undefined
+          }
+          confirmLabel={moduleId ? "Delete & re-open" : "Delete lesson"}
+          busy={del.isPending}
+          onCancel={() => setConfirming(false)}
+          onConfirm={() =>
+            del.mutate(
+              { moduleId: moduleId ?? "", file },
+              {
+                onSuccess: () => {
+                  setConfirming(false);
+                  navigate(`/subject/${slug}`);
+                },
+                // On error, stay put (the lesson may still exist) and surface it above.
+                onError: () => setConfirming(false),
+              },
+            )
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+/** /subject/:slug/artifact/* — generic reader for any in-subject file (e.g. assignments/). */
+export function Artifact() {
+  const params = useParams();
+  const slug = params.slug ?? "";
+  const relpath = params["*"] ?? "";
+  return (
+    <div className="reader-screen">
+      <ArtifactView slug={slug} relpath={relpath} title="Artifact" />
     </div>
   );
 }

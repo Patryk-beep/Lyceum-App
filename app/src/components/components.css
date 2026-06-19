@@ -921,3 +921,125 @@
   margin-top: auto;
   padding-top: 16px;
 }
+
+/* ---- Destructive confirm modal ---- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--canvas) 70%, transparent);
+}
+.confirm-dialog {
+  width: 100%;
+  max-width: 440px;
+  padding: 24px;
+}
+.confirm-dialog__title {
+  font-family: var(--font-serif);
+  margin-bottom: 10px;
+}
+.confirm-dialog__body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.confirm-dialog__danger {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--danger);
+}
+.confirm-dialog__field {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.confirm-dialog__input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--panel-2);
+  color: var(--text);
+}
+.confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* ---- Delete affordance on a subject card ---- */
+.subject-card__delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px 7px;
+  border-radius: var(--radius-sm);
+}
+.subject-card__delete:hover {
+  color: var(--danger);
+  background: var(--panel-2);
+}
+
+/* ---- Artifact list (lessons / assignments) ---- */
+.artifact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.artifact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.artifact-row__main {
+  min-width: 0;
+}
+.artifact-row__title {
+  font-size: 14px;
+}
+.artifact-row__meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.artifact-row__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ---- Danger zone footer ---- */
+.danger-zone {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.danger-zone__label {
+  margin-bottom: 8px;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--muted);
+}
+.reader__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}

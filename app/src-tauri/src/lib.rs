@@ -2,6 +2,7 @@
 //! stage the lyceum plugin), manages state, and exposes the engine + bridge commands.
 
 mod commands;
+mod delete;
 mod engine_cmds;
 mod error;
 mod prompts;
@@ -91,11 +92,16 @@ pub fn run() {
             commands::placement_step,
             commands::placement_finalize,
             commands::get_levels,
+            commands::list_lessons,
+            commands::delete_lesson,
+            commands::delete_assignment,
             engine_cmds::preflight,
             engine_cmds::claude_doctor,
             engine_cmds::claude_smoke,
             engine_cmds::run_subject_step,
             engine_cmds::create_subject,
+            engine_cmds::delete_subject,
+            engine_cmds::reset_curriculum,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

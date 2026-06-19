@@ -6,9 +6,11 @@ import { StageChip } from "./StageChip";
 export function SubjectCard({
   summary,
   onOpen,
+  onDelete,
 }: {
   summary: SubjectSummary;
   onOpen?: (slug: string) => void;
+  onDelete?: (slug: string) => void;
 }) {
   const stage = phaseToStage(summary.phase);
   return (
@@ -21,6 +23,19 @@ export function SubjectCard({
       tabIndex={0}
     >
       <div className="subject-card__accent" />
+      {onDelete && (
+        <button
+          className="subject-card__delete"
+          aria-label={`Delete ${summary.subject}`}
+          title="Delete subject"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(summary.slug);
+          }}
+        >
+          ✕
+        </button>
+      )}
       <MasteryRing value={summary.meanMastery} size={64} />
       <div className="subject-card__body">
         <div className="subject-card__title">{summary.subject}</div>

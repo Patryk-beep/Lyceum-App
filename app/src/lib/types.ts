@@ -177,6 +177,16 @@ export interface Module {
   objectives: Objective[];
 }
 
+export interface Assignment {
+  id: string;
+  moduleId: string;
+  // Wire key is `type` (Rust serde-renames `kind` -> `type`), NOT `kind`.
+  type: string;
+  file: string;
+  objectives: string[];
+  status: "open" | "submitted" | "graded";
+}
+
 export interface Manifest {
   subject: string;
   slug: string;
@@ -192,8 +202,23 @@ export interface Manifest {
     status: string;
   };
   modules: Module[];
+  assignments: Assignment[];
   reviewQueue: ReviewItem[];
   [key: string]: unknown;
+}
+
+/** A row in the lessons/ directory, enriched with its module (by NN prefix). */
+export interface LessonEntry {
+  file: string;
+  moduleId: string | null;
+  moduleStatus: string | null;
+  title: string | null;
+}
+
+export interface DeleteLessonResult {
+  manifest: Manifest;
+  /** Whether the taught flip actually armed a re-teach. */
+  reopened: boolean;
 }
 
 export interface ReviewItem {

@@ -22,4 +22,14 @@ describe("golden.json fixture parity", () => {
     expect(typeof m.reviewQueue[0].box === "number").toBe(true);
     expect(["pass", "fail", undefined]).toContain(m.reviewQueue[0].lastResult);
   });
+
+  it("carries the assignments array with the `type` wire key (not `kind`)", () => {
+    expect(Array.isArray(m.assignments)).toBe(true);
+    const a = m.assignments[0];
+    expect(a).toMatchObject({ id: "a02", moduleId: "m02", status: "open" });
+    expect(a.type).toBe("guided-practice"); // serde renames kind -> type
+    expect(a).not.toHaveProperty("kind");
+    expect(a).toHaveProperty("file");
+    expect(Array.isArray(a.objectives)).toBe(true);
+  });
 });

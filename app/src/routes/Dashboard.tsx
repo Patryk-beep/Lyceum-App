@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { ConfirmDestructive } from "../components/ConfirmDestructive";
 import { ResumeHero } from "../components/ResumeHero";
 import { ReviewDueCard } from "../components/ReviewDueCard";
 import { SectionDivider } from "../components/SectionDivider";
 import { Sigil } from "../components/Sigil";
 import { StatGrid, type Stat } from "../components/StatGrid";
 import { SubjectCard } from "../components/SubjectCard";
-import { useSeedDemo, useSubjects } from "../lib/query";
+import { useDeleteSubject, useSeedDemo, useSubjects } from "../lib/query";
 import type { SubjectSummary } from "../lib/types";
+import { useEngineStore } from "../stores/useEngineStore";
 
 function buildStats(subjects: SubjectSummary[]): Stat[] {
   const modulesMastered = subjects.reduce((n, s) => n + s.modulesMastered, 0);
@@ -32,12 +35,14 @@ export function DashboardView({
   onOpenSubject,
   onReview,
   onSeedDemo,
+  onDeleteSubject,
   seeding = false,
 }: {
   subjects: SubjectSummary[];
   onOpenSubject?: (slug: string) => void;
   onReview?: () => void;
   onSeedDemo?: () => void;
+  onDeleteSubject?: (slug: string) => void;
   seeding?: boolean;
 }) {
   if (subjects.length === 0) {
@@ -74,8 +79,15 @@ export function DashboardView({
       <div>
         <SectionDivider label="Your subjects" />
         <div className="subject-grid" style={{ marginTop: 12 }}>
+          {/* The grid lists every subject; delete lives on the card (the hero is a
+              pure CTA), so each subject has exactly one delete affordance. */}
           {[resume, ...rest].map((s) => (
-            <SubjectCard key={s.slug} summary={s} onOpen={onOpenSubject} />
+            <SubjectCard
+              key={s.slug}
+              summary={s}
+              onOpen={onOpenSubject}
+              onDelete={onDeleteSubject}
+            />
           ))}
         </div>
       </div>
@@ -88,6 +100,8 @@ export function Dashboard() {
   const navigate = useNavigate();
   const { data: subjects, isLoading, error } = useSubjects();
   const seed = useSeedDemo();
+  const del = useDeleteSubject();
+  const [confirming, setConfirming] = useState<SubjectSummary | null>(null);
 
   if (isLoading) {
     return <div className="muted">Loading your workspace…</div>;
@@ -96,13 +110,40 @@ export function Dashboard() {
     return <div className="muted">Could not load workspace: {String(error)}</div>;
   }
 
+  const list = subjects ?? [];
+
   return (
-    <DashboardView
-      subjects={subjects ?? []}
-      onOpenSubject={(slug) => navigate(`/subject/${slug}`)}
-      onReview={() => navigate("/review")}
-      onSeedDemo={() => seed.mutate()}
-      seeding={seed.isPending}
-    />
+    <>
+      <DashboardView
+        subjects={list}
+        onOpenSubject={(slug) => navigate(`/subject/${slug}`)}
+        onReview={() => navigate("/review")}
+        onSeedDemo={() => seed.mutate()}
+        onDeleteSubject={(slug) =>
+          setConfirming(list.find((s) => s.slug === slug) ?? null)
+        }
+        seeding={seed.isPending}
+      />
+      {confirming && (
+        <ConfirmDestructive
+          title={`Delete “${confirming.subject}”?`}
+          body="This removes all lessons, assignments, reviews and progress for this subject."
+          danger="This cannot be undone."
+          confirmWord={confirming.slug}
+          confirmLabel="Delete subject"
+          busy={del.isPending}
+          onCancel={() => setConfirming(null)}
+          onConfirm={() =>
+            del.mutate(confirming.slug, {
+              onSuccess: () => {
+                // The deleted subject's warm session is gone — clear stale engine UI.
+                useEngineStore.getState().reset();
+                setConfirming(null);
+              },
+            })
+          }
+        />
+      )}
+    </>
   );
 }
