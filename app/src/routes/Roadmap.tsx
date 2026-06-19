@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import { ConfirmDestructive } from "../components/ConfirmDestructive";
 import { MasterySeal, type SealState } from "../components/MasterySeal";
@@ -52,15 +52,6 @@ export function RoadmapView({
           {manifest.current.status}
         </div>
       </header>
-
-      <div className="roadmap__subnav">
-        <Link to={`/subject/${manifest.slug}/research`}>Research</Link>
-        <Link to={`/subject/${manifest.slug}/placement`}>Placement</Link>
-        <Link to={`/subject/${manifest.slug}/lessons`}>Lessons</Link>
-        <Link to={`/subject/${manifest.slug}/assignments`}>Assignments</Link>
-        <Link to={`/subject/${manifest.slug}/analytics`}>Analytics</Link>
-        <Link to={`/subject/${manifest.slug}/capstone`}>Capstone</Link>
-      </div>
 
       <button
         className="btn btn--primary"

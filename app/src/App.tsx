@@ -32,6 +32,7 @@ export function App() {
           <Route path="/subject/:slug/artifact/*" element={<Artifact />} />
           <Route path="/subject/:slug/placement" element={<Placement />} />
           <Route path="/subject/:slug/capstone" element={<Capstone />} />
+          <Route path="/subject/:slug/review" element={<Review />} />
           <Route path="/subject/:slug/analytics" element={<Analytics />} />
           <Route path="/review" element={<Review />} />
           <Route path="/analytics" element={<Analytics />} />

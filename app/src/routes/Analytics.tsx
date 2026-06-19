@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { MasteryHeatmap } from "../components/MasteryHeatmap";
@@ -75,11 +76,40 @@ export function AnalyticsView({ report }: { report: AnalyticsReport }) {
 
 export function Analytics() {
   const params = useParams();
-  const { data: subjects } = useSubjects();
-  const slug = params.slug ?? subjects?.[0]?.slug ?? "";
+  const { data: subjects, isLoading: subjectsLoading } = useSubjects();
+  const [picked, setPicked] = useState<string | null>(null);
+  const slug = params.slug ?? picked ?? subjects?.[0]?.slug ?? "";
   const { data: report, isLoading } = useAnalytics(slug);
 
+  if (!slug && subjectsLoading) return <div className="muted">Loading…</div>;
   if (!slug) return <div className="muted">No subjects yet.</div>;
-  if (isLoading || !report) return <div className="muted">Loading analytics…</div>;
-  return <AnalyticsView report={report} />;
+
+  const showPicker = !params.slug && (subjects?.length ?? 0) > 1;
+
+  return (
+    <>
+      {showPicker && (
+        <label className="subject-picker subject-picker--wide">
+          <span className="dashboard__section-title">Subject</span>
+          <select
+            className="wizard__input"
+            value={slug}
+            onChange={(e) => setPicked(e.target.value)}
+            data-testid="analytics-subject-picker"
+          >
+            {subjects!.map((s) => (
+              <option key={s.slug} value={s.slug}>
+                {s.subject}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {isLoading || !report ? (
+        <div className="muted">Loading analytics…</div>
+      ) : (
+        <AnalyticsView report={report} />
+      )}
+    </>
+  );
 }

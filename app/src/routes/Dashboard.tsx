@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { ConfirmDestructive } from "../components/ConfirmDestructive";
+import { lastSubject, resumeRoute } from "../hooks/useResumeState";
 import { ResumeHero } from "../components/ResumeHero";
 import { ReviewDueCard } from "../components/ReviewDueCard";
 import { SectionDivider } from "../components/SectionDivider";
@@ -112,11 +113,18 @@ export function Dashboard() {
 
   const list = subjects ?? [];
 
+  // Float the most-recently-touched subject to the hero so "Continue" resumes the
+  // last thing you were doing (NN/G: highest-leverage move for short, frequent use).
+  const last = lastSubject();
+  const i = last ? list.findIndex((s) => s.slug === last) : -1;
+  const ordered =
+    i > 0 ? [list[i], ...list.slice(0, i), ...list.slice(i + 1)] : list;
+
   return (
     <>
       <DashboardView
-        subjects={list}
-        onOpenSubject={(slug) => navigate(`/subject/${slug}`)}
+        subjects={ordered}
+        onOpenSubject={(slug) => navigate(resumeRoute(slug))}
         onReview={() => navigate("/review")}
         onSeedDemo={() => seed.mutate()}
         onDeleteSubject={(slug) =>

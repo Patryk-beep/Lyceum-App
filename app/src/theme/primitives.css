@@ -1,5 +1,10 @@
 /* Base resets + shared primitives. Tokens come from tokens.<theme>.css. */
 
+/* Theme-independent layout constants (the per-theme palette lives in tokens.*). */
+:root {
+  --topbar-h: 40px;
+}
+
 * {
   box-sizing: border-box;
 }

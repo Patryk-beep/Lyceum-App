@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { forgetSubject } from "../hooks/useResumeState";
 import { api } from "./ipc";
 
 export function useSubjects() {
@@ -73,6 +74,7 @@ export function useDeleteSubject() {
   return useMutation({
     mutationFn: (slug: string) => api.deleteSubject(slug),
     onSuccess: (_d, slug) => {
+      forgetSubject(slug); // drop its resume entry so the palette won't offer it
       qc.invalidateQueries({ queryKey: ["subjects"] });
       qc.invalidateQueries({ queryKey: ["workspace"] });
       qc.invalidateQueries({ queryKey: ["streak"] });

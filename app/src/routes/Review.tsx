@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 
 import { ReviewCard } from "../components/ReviewCard";
 import { api } from "../lib/ipc";
@@ -57,12 +58,17 @@ export function ReviewView({
   );
 }
 
-/** Container — reviews the first subject with due items (cross-subject in M3). */
+/** Container — scoped to `:slug` when reached from a subject; otherwise a global
+ *  queue with an explicit subject picker (no silent first-subject default). */
 export function Review() {
+  const params = useParams();
   const qc = useQueryClient();
-  const { data: subjects } = useSubjects();
-  const slug =
+  const { data: subjects, isLoading: subjectsLoading } = useSubjects();
+  const [picked, setPicked] = useState<string | null>(null);
+
+  const fallback =
     subjects?.find((s) => s.reviewsDue > 0)?.slug ?? subjects?.[0]?.slug ?? "";
+  const slug = params.slug ?? picked ?? fallback;
   const { data: cards, isLoading } = useReviewDue(slug);
 
   const grade = useMutation({
@@ -74,14 +80,40 @@ export function Review() {
     },
   });
 
+  if (!slug && subjectsLoading) return <div className="muted">Loading…</div>;
   if (!slug) return <div className="muted">No subjects yet.</div>;
-  if (isLoading) return <div className="muted">Loading reviews…</div>;
+
+  const showPicker = !params.slug && (subjects?.length ?? 0) > 1;
 
   return (
-    <ReviewView
-      slug={slug}
-      cards={cards ?? []}
-      onGrade={(_s, itemId, g) => grade.mutate({ itemId, grade: g })}
-    />
+    <div className="review-screen">
+      {showPicker && (
+        <label className="subject-picker">
+          <span className="dashboard__section-title">Subject</span>
+          <select
+            className="wizard__input"
+            value={slug}
+            onChange={(e) => setPicked(e.target.value)}
+            data-testid="review-subject-picker"
+          >
+            {subjects!.map((s) => (
+              <option key={s.slug} value={s.slug}>
+                {s.subject}
+                {s.reviewsDue ? ` (${s.reviewsDue} due)` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {isLoading ? (
+        <div className="muted">Loading reviews…</div>
+      ) : (
+        <ReviewView
+          slug={slug}
+          cards={cards ?? []}
+          onGrade={(_s, itemId, g) => grade.mutate({ itemId, grade: g })}
+        />
+      )}
+    </div>
   );
 }

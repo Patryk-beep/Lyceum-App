@@ -216,19 +216,11 @@
 /* ---- App shell ---- */
 .app-shell {
   display: grid;
-  grid-template-rows: 38px 1fr;
+  grid-template-rows: var(--topbar-h) 1fr;
   height: 100%;
 }
-.window-chrome {
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  font-size: 12.5px;
-  color: var(--muted);
-  background: var(--canvas);
-  border-bottom: 1px solid var(--line);
-  user-select: none;
-}
+/* `.window-chrome` was replaced by `.topbar`; only the gilt brand class remains
+   (used on the topbar brand span + its aurelia-dark gradient override). */
 .window-chrome__brand {
   color: var(--gold);
   font-weight: 700;
@@ -236,23 +228,34 @@
 }
 .app-shell__body {
   display: grid;
-  grid-template-columns: 218px 1fr;
+  grid-template-columns: 232px 1fr;
   min-height: 0;
+  transition: grid-template-columns 0.2s ease;
+}
+.app-shell__body--collapsed {
+  grid-template-columns: 0 1fr;
+}
+.app-shell__body--collapsed .sidebar {
+  visibility: hidden;
 }
 .sidebar {
   background: var(--panel);
   border-right: 1px solid var(--line);
-  padding: 18px 12px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-height: 0;
+  overflow: hidden auto;
 }
 .sidebar__item {
+  display: block;
   padding: 9px 12px;
   border-radius: var(--radius-sm);
   color: var(--muted);
   font-size: 14px;
   cursor: pointer;
+  text-decoration: none;
 }
 .sidebar__item:hover {
   background: var(--panel-2);
@@ -302,7 +305,7 @@
 /* ---- Live session drawer + console ---- */
 .session-drawer {
   position: fixed;
-  top: 38px;
+  top: var(--topbar-h);
   right: 0;
   bottom: 0;
   display: flex;
@@ -311,7 +314,7 @@
 .session-drawer__toggle {
   align-self: flex-start;
   margin-top: 16px;
-  width: 22px;
+  width: 24px;
   height: 44px;
   border: 1px solid var(--line);
   border-right: none;
@@ -638,23 +641,6 @@
 .wizard__input:focus {
   outline: none;
   border-color: var(--gold-line);
-}
-
-/* ---- Roadmap sub-nav ---- */
-.roadmap__subnav {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
-  font-size: 13px;
-}
-.roadmap__subnav a {
-  color: var(--muted);
-  border-bottom: 1px solid transparent;
-  padding-bottom: 2px;
-}
-.roadmap__subnav a:hover {
-  color: var(--gold);
-  border-bottom-color: var(--gold-line);
 }
 
 /* ---- Analytics ---- */
@@ -1116,4 +1102,407 @@
 }
 .submission__submit {
   align-self: flex-start;
+}
+
+/* ===================================================================
+   Navigation redesign: top bar · sidebar zones · loop spine ·
+   breadcrumb · subject switcher · command palette · a11y
+   =================================================================== */
+
+/* ---- Skip link + screen-reader-only ---- */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 80;
+  background: var(--panel);
+  color: var(--text);
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 8px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Top bar (replaces window-chrome; keeps the gilt brand) ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--line);
+  user-select: none;
+}
+.topbar__brand {
+  font-weight: 700;
+  font-size: 13px;
+}
+.topbar__spacer {
+  flex: 1;
+}
+.topbar__toggle,
+.topbar__kbd,
+.topbar__gear {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 4px 9px;
+  font-size: 14px;
+  font-family: var(--font-sans);
+}
+.topbar__kbd {
+  border-color: var(--line-strong);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+.topbar__toggle:hover,
+.topbar__kbd:hover,
+.topbar__gear:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+/* ---- Sidebar zones ---- */
+.sidebar__zone {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar__zone--subject {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.sidebar__foot-nav {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.sidebar__item--overview {
+  font-weight: 600;
+  color: var(--lamplight);
+}
+.sidebar__item--tool {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+/* ---- Subject quick-switcher ---- */
+.subject-switcher {
+  position: relative;
+  margin-bottom: 6px;
+}
+.subject-switcher__current {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--lamplight);
+  padding: 8px 10px;
+  cursor: pointer;
+  font-family: var(--font-serif);
+  font-size: 15px;
+}
+.subject-switcher__current:hover {
+  border-color: var(--gold-line);
+}
+.subject-switcher__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.subject-switcher__caret {
+  color: var(--muted);
+  flex: none;
+}
+.subject-switcher__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+.subject-switcher__list {
+  position: absolute;
+  z-index: 21;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+.subject-switcher__option {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  font-family: var(--font-sans);
+}
+.subject-switcher__option:hover {
+  background: var(--gold-soft);
+}
+
+/* ---- Loop spine (nav + progress "path") ---- */
+.loop-nav {
+  list-style: none;
+  margin: 2px 0;
+  padding: 0;
+  position: relative;
+}
+.loop-nav::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  top: 16px;
+  bottom: 16px;
+  width: 2px;
+  background: var(--line);
+}
+.loop-nav__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+.loop-nav__item:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.loop-nav__item--active {
+  background: var(--gold-soft);
+  color: var(--text);
+}
+.loop-nav__glyph {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--panel);
+  font-size: 11px;
+  line-height: 1;
+  z-index: 1;
+}
+.loop-nav__glyph--done {
+  color: var(--gold);
+}
+.loop-nav__glyph--current {
+  background: var(--gold);
+  color: var(--canvas);
+  border: none;
+}
+.loop-nav__glyph--todo {
+  color: var(--faint);
+}
+.loop-nav__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.loop-nav__badge {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  /* --text over a mostly-panel tint keeps AA contrast on all four themes; the
+     teal border carries the "review" identity (filled stage-review fails AA on
+     the light Almanac theme for 11px text). */
+  background: color-mix(in srgb, var(--stage-review) 22%, var(--panel));
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--stage-review) 45%, transparent);
+  border-radius: var(--radius-pill);
+  padding: 0 6px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ---- Breadcrumb (top bar) ---- */
+.breadcrumb {
+  min-width: 0;
+  overflow: hidden;
+}
+.breadcrumb__list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.breadcrumb__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.breadcrumb__link {
+  color: var(--muted);
+}
+.breadcrumb__link:hover {
+  color: var(--gold);
+}
+.breadcrumb__item:last-child span {
+  color: var(--text);
+}
+.breadcrumb__sep {
+  color: var(--faint);
+}
+
+/* ---- Subject pickers (Review / Analytics global views) ---- */
+.subject-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  max-width: 280px;
+}
+.subject-picker--wide {
+  max-width: 340px;
+}
+
+/* ---- Command palette (cmdk) ---- */
+.palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: color-mix(in srgb, var(--canvas) 72%, transparent);
+}
+.palette {
+  position: fixed;
+  z-index: 61;
+  top: 13vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, 92vw);
+  max-height: 64vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+.palette__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.palette__scope {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--gold);
+  flex: none;
+}
+.palette__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 16px;
+  font-family: var(--font-sans);
+}
+.palette__input::placeholder {
+  color: var(--faint);
+}
+.palette__list {
+  overflow: auto;
+  padding: 6px;
+}
+.palette__group [cmdk-group-heading] {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  padding: 8px 10px 4px;
+}
+.palette__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text);
+  font-size: 14px;
+}
+.palette__item[data-selected="true"],
+.palette__item[aria-selected="true"] {
+  background: var(--gold-soft);
+}
+.palette__hint {
+  font-size: 12px;
+  color: var(--faint);
+}
+.palette__empty {
+  padding: 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---- Global focus ring (WCAG 2.4.11, all four themes) ---- */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--gold-soft);
+}
+/* <main> is focused programmatically on route change — not a keyboard target. */
+.content:focus,
+.content:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ---- Reduced motion: near-zero so transitionend still fires (WCAG C39) ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
