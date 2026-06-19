@@ -50,6 +50,10 @@ export const api = {
     invoke<DeleteLessonResult>("delete_lesson", { slug, moduleId, file }),
   deleteAssignment: (slug: string, assignmentId: string) =>
     invoke<Manifest>("delete_assignment", { slug, assignmentId }),
+  submitAssignment: (slug: string, assignmentId: string, content: string) =>
+    invoke<Manifest>("submit_assignment", { slug, assignmentId, content }),
+  submitCapstone: (slug: string, content: string) =>
+    invoke<Manifest>("submit_capstone", { slug, content }),
   deleteSubject: (slug: string) => invoke<void>("delete_subject", { slug }),
   resetCurriculum: (slug: string) =>
     invoke<Manifest>("reset_curriculum", { slug }),

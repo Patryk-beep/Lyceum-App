@@ -351,6 +351,27 @@ pub struct Assignment {
     #[serde(default)]
     pub objectives: Vec<ObjectiveId>,
     pub status: AssignmentStatus,
+    /// App input-modality hint for the hand-in widget: "text" | "markdown" |
+    /// "code" | "file" | "choice". Absent ⇒ the app defaults to a markdown editor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input_type: Option<String>,
+    /// Choices for an `inputType:"choice"` task (learner-visible; the correct
+    /// answer is held out of the manifest).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub options: Vec<String>,
+    /// Language label for an `inputType:"code"` task.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
+    /// Where the app wrote the learner's hand-in, e.g. `submissions/a02.md`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub submission_file: Option<String>,
+    /// When the hand-in was submitted.
+    #[serde(
+        default,
+        with = "date::iso_opt",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub submitted_at: Option<Date>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,
 }

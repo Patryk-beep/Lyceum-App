@@ -147,10 +147,11 @@ pub fn ensure_workspace(ws: &Path) -> AppResult<()> {
 
 /// Create the per-subject directory skeleton so every downstream skill finds the
 /// folders it writes into — `lessons/` (teach-lesson), `assignments/`
-/// (create-assignment), and `quizzes/` (teach-lesson + assess-understanding
-/// machine output). Idempotent; safe to call on an existing subject.
+/// (create-assignment), `quizzes/` (teach-lesson + assess-understanding machine
+/// output), and `submissions/` (the app's student hand-ins). Idempotent; safe to
+/// call on an existing subject.
 pub fn scaffold_subject_dirs(dir: &Path) -> std::io::Result<()> {
-    for sub in ["lessons", "assignments", "quizzes"] {
+    for sub in ["lessons", "assignments", "quizzes", "submissions"] {
         std::fs::create_dir_all(dir.join(sub))?;
     }
     Ok(())
@@ -482,7 +483,7 @@ mod m3_tests {
         let tmp = tempfile::tempdir().unwrap();
         let dir = tmp.path().join("learning").join("x");
         scaffold_subject_dirs(&dir).unwrap();
-        for sub in ["lessons", "assignments", "quizzes"] {
+        for sub in ["lessons", "assignments", "quizzes", "submissions"] {
             assert!(dir.join(sub).is_dir(), "missing {sub}/");
         }
         // Idempotent: a second call on an existing skeleton succeeds.
@@ -497,7 +498,7 @@ mod m3_tests {
         ensure_workspace(tmp.path()).unwrap();
         let slug = seed_demo(tmp.path(), date!(2026 - 06 - 18)).unwrap();
         let dir = workspace::subject_dir(tmp.path(), &slug);
-        for sub in ["lessons", "assignments", "quizzes"] {
+        for sub in ["lessons", "assignments", "quizzes", "submissions"] {
             assert!(dir.join(sub).is_dir(), "seed_demo did not create {sub}/");
         }
     }

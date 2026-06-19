@@ -115,6 +115,34 @@ pub fn delete_assignment(
     crate::delete::delete_assignment(&state.workspace, &slug, &assignment_id, workspace::today())
 }
 
+/// Submit a student's hand-in for an assignment: write the answer file, flip the
+/// assignment to `submitted`, and realign the phase so the next step assesses it.
+#[tauri::command]
+pub fn submit_assignment(
+    state: State<AppState>,
+    slug: String,
+    assignment_id: String,
+    content: String,
+) -> AppResult<Manifest> {
+    crate::submit::submit_assignment(
+        &state.workspace,
+        &slug,
+        &assignment_id,
+        &content,
+        workspace::today(),
+    )
+}
+
+/// Submit the capstone deliverable; the capstone skill grades + certifies it next.
+#[tauri::command]
+pub fn submit_capstone(
+    state: State<AppState>,
+    slug: String,
+    content: String,
+) -> AppResult<Manifest> {
+    crate::submit::submit_capstone(&state.workspace, &slug, &content, workspace::today())
+}
+
 #[tauri::command]
 pub fn placement_pool(
     state: State<AppState>,

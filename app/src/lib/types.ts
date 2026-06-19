@@ -177,6 +177,9 @@ export interface Module {
   objectives: Objective[];
 }
 
+/** The hand-in widget a skill can request for an assignment. */
+export type InputType = "text" | "markdown" | "code" | "file" | "choice";
+
 export interface Assignment {
   id: string;
   moduleId: string;
@@ -185,6 +188,13 @@ export interface Assignment {
   file: string;
   objectives: string[];
   status: "open" | "submitted" | "graded";
+  // Hand-in metadata (optional; absent on older manifests). The app defaults a
+  // missing `inputType` to "markdown".
+  inputType?: InputType;
+  options?: string[];
+  language?: string;
+  submissionFile?: string;
+  submittedAt?: string;
 }
 
 export interface Manifest {

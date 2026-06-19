@@ -273,6 +273,11 @@ mod tests {
             file: "assignments/01.md".into(),
             objectives: vec![],
             status: AssignmentStatus::Submitted,
+            input_type: None,
+            options: vec![],
+            language: None,
+            submission_file: None,
+            submitted_at: None,
             extra: Default::default(),
         }];
         assert_eq!(
@@ -300,6 +305,11 @@ mod tests {
             file: "assignments/01.md".into(),
             objectives: vec![],
             status: AssignmentStatus::Submitted,
+            input_type: None,
+            options: vec![],
+            language: None,
+            submission_file: None,
+            submitted_at: None,
             extra: Default::default(),
         }];
         // Should route to CreateAssignment for m02, NOT Assess(a01).

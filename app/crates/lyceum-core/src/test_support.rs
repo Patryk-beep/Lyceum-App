@@ -127,6 +127,11 @@ pub fn golden_manifest() -> Manifest {
         file: "assignments/02-m02-guided-practice.md".into(),
         objectives: vec![ObjectiveId("m02-o1".into())],
         status: AssignmentStatus::Open,
+        input_type: None,
+        options: vec![],
+        language: None,
+        submission_file: None,
+        submitted_at: None,
         extra: Default::default(),
     }];
 

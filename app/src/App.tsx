@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { PreflightGate } from "./components/PreflightGate";
 import { Analytics } from "./routes/Analytics";
-import { Assignments } from "./routes/Assignments";
+import { AssignmentDetail, Assignments } from "./routes/Assignments";
 import { Capstone } from "./routes/Capstone";
 import { Dashboard } from "./routes/Dashboard";
 import { Diagnostics } from "./routes/Diagnostics";
@@ -27,6 +27,7 @@ export function App() {
           <Route path="/subject/:slug/research" element={<Research />} />
           <Route path="/subject/:slug/lessons" element={<Lessons />} />
           <Route path="/subject/:slug/assignments" element={<Assignments />} />
+          <Route path="/subject/:slug/assignment/:id" element={<AssignmentDetail />} />
           <Route path="/subject/:slug/lesson/:file" element={<Lesson />} />
           <Route path="/subject/:slug/artifact/*" element={<Artifact />} />
           <Route path="/subject/:slug/placement" element={<Placement />} />

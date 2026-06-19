@@ -8,6 +8,7 @@ mod error;
 mod prompts;
 mod service;
 mod state;
+mod submit;
 mod workspace;
 
 use std::path::PathBuf;
@@ -95,6 +96,8 @@ pub fn run() {
             commands::list_lessons,
             commands::delete_lesson,
             commands::delete_assignment,
+            commands::submit_assignment,
+            commands::submit_capstone,
             engine_cmds::preflight,
             engine_cmds::claude_doctor,
             engine_cmds::claude_smoke,

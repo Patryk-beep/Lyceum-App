@@ -22,6 +22,10 @@ export function Placement() {
   const [answers, setAnswers] = useState<boolean[]>([]);
   const [state, setState] = useState<PlacementState | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [responses, setResponses] = useState<{ answer: string; correct: boolean }[]>(
+    [],
+  );
 
   useEffect(() => {
     api.placementStep(answers).then(setState);
@@ -34,12 +38,22 @@ export function Placement() {
   });
 
   const finalize = useMutation({
-    mutationFn: (level: number) =>
-      api.placementFinalize(
-        slug,
-        level,
-        `placed at L${level} after ${answers.length} item(s)`,
-      ),
+    mutationFn: (level: number) => {
+      // Persist a compact self-graded transcript of what the learner typed (the
+      // full prose transcript lives in placement.md, written by the skill).
+      const transcript = responses
+        .map(
+          (r, i) =>
+            `Q${i + 1}(${r.correct ? "✓" : "✗"}): ${
+              r.answer.slice(0, 80).replace(/\s+/g, " ").trim() || "(blank)"
+            }`,
+        )
+        .join(" | ");
+      const evidence = `placed at L${level} after ${answers.length} item(s)${
+        transcript ? "; " + transcript : ""
+      }`;
+      return api.placementFinalize(slug, level, evidence);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["manifest", slug] });
       qc.invalidateQueries({ queryKey: ["subjects"] });
@@ -95,6 +109,8 @@ export function Placement() {
   if (!item) return <div className="muted">No placement items available.</div>;
 
   function answer(correct: boolean) {
+    setResponses((r) => [...r, { answer: draft, correct }]);
+    setDraft("");
     setRevealed(false);
     setAnswers((a) => [...a, correct]);
   }
@@ -106,8 +122,20 @@ export function Placement() {
       </div>
       <div className="card review-card" style={{ borderLeftColor: "var(--stage-research)" }}>
         <div className="review-card__prompt">{item.stem}</div>
+        <textarea
+          className="wizard__input submission__textarea"
+          data-testid="placement-answer"
+          placeholder="Type your answer, then reveal the scoring key to self-check…"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          style={{ marginTop: 10, minHeight: 90 }}
+        />
         {!revealed ? (
-          <button className="btn btn--outline" onClick={() => setRevealed(true)}>
+          <button
+            className="btn btn--outline"
+            style={{ marginTop: 10 }}
+            onClick={() => setRevealed(true)}
+          >
             Reveal scoring key
           </button>
         ) : (

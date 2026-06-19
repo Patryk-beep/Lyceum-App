@@ -21,6 +21,18 @@
 
 **Default policy:** at L1–2 lean on recall, worked examples, and guided practice; at L3–4 shift to performance tasks and productive failure; at L5–6 use projects, problem-based scenarios, and teaching tasks. **Always interleave** (mix types; once prior modules exist, fold in one or two items from earlier material) and **always withhold answers until an attempt**.
 
+**App input modality (`inputType`).** When running inside the Lyceum app, `create-assignment` records an `inputType` on the `assignments[]` entry so the app renders the right hand-in widget. Map it from the task type:
+
+| Task type | `inputType` |
+|---|---|
+| Multiple-choice check | `choice` (also write `options` — the visible choices, never the answer key) |
+| Short / free-recall, flashcard, Feynman, interleaved challenge | `text` |
+| Code / programming deliberate-practice drill | `code` (also write `language`) |
+| Performance task, productive failure, problem-based scenario, teach-it, worked example, guided practice, explanation/essay | `markdown` (the default) |
+| Project / portfolio (document deliverable) | `file` (a `.txt`/`.md` hand-in) or `markdown` |
+
+Absent ⇒ the app defaults to `markdown`. The standalone plugin chain ignores `inputType` (the learner submits inline in the brief).
+
 ---
 
 ## The single-point analytic rubric (attach to every brief)

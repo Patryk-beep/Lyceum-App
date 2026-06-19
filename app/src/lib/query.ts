@@ -109,6 +109,21 @@ export function useDeleteAssignment(slug: string) {
   });
 }
 
+/** Hand in a student answer: write the file + flip to submitted. The caller then
+ *  runs the next engine step, which routes to assess-understanding to grade it. */
+export function useSubmitAssignment(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { assignmentId: string; content: string }) =>
+      api.submitAssignment(slug, vars.assignmentId, vars.content),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["manifest", slug] });
+      qc.invalidateQueries({ queryKey: ["subjects"] });
+      qc.invalidateQueries({ queryKey: ["artifact", slug] });
+    },
+  });
+}
+
 export function useResetCurriculum(slug: string) {
   const qc = useQueryClient();
   return useMutation({

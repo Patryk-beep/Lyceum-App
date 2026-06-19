@@ -20,7 +20,7 @@ Then read the active subject manifest at `learning/<slug>/manifest.json`. If no 
 
 ## Process
 
-1. **Locate the submission.** Find the `assignments[]` entry being graded — usually the one with `status:"submitted"`, or, if the learner just pasted an answer conversationally against an `open` assignment, the matching entry. If that entry is not yet `submitted`, flip it to `status:"submitted"` now, then grade. Open the assignment file at its `file` path to read the brief, the rubric, the learner's submission, and any held answer key.
+1. **Locate the submission.** Find the `assignments[]` entry being graded — usually the one with `status:"submitted"`, or, if the learner just pasted an answer conversationally against an `open` assignment, the matching entry. If that entry is not yet `submitted`, flip it to `status:"submitted"` now, then grade. Read the brief, the rubric, and any held answer key from the assignment's `file` path. **For the learner's actual submission: if the entry carries a `submissionFile` (the Lyceum app writes the hand-in there, e.g. `submissions/a02.md`), read THAT file — it is the authoritative answer. Otherwise fall back to the inline SUBMISSION PLACEHOLDER in the brief.** When the entry's `inputType` is `"choice"`, the submission is the chosen option text — grade it against the held answer key.
 
 2. **Identify the targeted objectives.** From the entry's `objectives[]`, load each targeted objective from its module so you grade against the right standard. Note the module's `level` and `masteryThreshold`.
 

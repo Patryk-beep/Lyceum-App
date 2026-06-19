@@ -104,7 +104,7 @@ fn remove_file_idempotent(path: &Path) -> AppResult<()> {
     }
 }
 
-fn halt_if_invalid(manifest: &Manifest, what: &str) -> AppResult<()> {
+pub(crate) fn halt_if_invalid(manifest: &Manifest, what: &str) -> AppResult<()> {
     let errs = validate::validate(manifest);
     if errs.is_empty() {
         Ok(())
@@ -207,7 +207,7 @@ fn status_str(s: AssignmentStatus) -> &'static str {
     }
 }
 
-fn route_to_phase(route: &Route) -> Option<Phase> {
+pub(crate) fn route_to_phase(route: &Route) -> Option<Phase> {
     match route {
         Route::Teach { .. } => Some(Phase::Teach),
         Route::CreateAssignment { .. } | Route::CompleteOpenAssignment { .. } => {

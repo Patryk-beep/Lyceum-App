@@ -33,7 +33,7 @@ Then read the active subject manifest at `learning/<slug>/manifest.json`. If no 
    - **Objective(s) targeted** (list the objective ids and text).
    - **The standard** — a concrete "done well looks like…" statement so the learner knows the goal (Feed-Up).
    - **A single-point analytic rubric** — describe **only the Proficient column** for each dimension (correctness/accuracy, reasoning/process, conceptual understanding, communication/clarity; rename per task), leaving open blank space for "below" and "above". Do not fill in the off-bands.
-   - A clearly marked **SUBMISSION PLACEHOLDER** where the learner writes their answer.
+   - A clearly marked **SUBMISSION PLACEHOLDER** where the learner writes their answer (the standalone-chain fallback; inside the Lyceum app the learner hands in through the `inputType` widget instead and the app stores the answer under `submissions/`).
 
 6. **Calibrate difficulty.** Aim the task at the edge of current ability — effortful but achievable with current scaffolding (desirable difficulty, inside the ZPD). If recent history shows the learner sailing through, raise difficulty; if they cannot get traction even with hints, drop back a notch.
 
@@ -46,7 +46,8 @@ Then read the active subject manifest at `learning/<slug>/manifest.json`. If no 
 ## State writes
 
 - Append one entry to `manifest.json` `assignments[]`:
-  `{ id, moduleId, type, file, objectives, status: "open" }`.
+  `{ id, moduleId, type, file, objectives, status: "open", inputType }`.
+  **`inputType`** tells the Lyceum app which hand-in widget to render — choose it from the task type (see the input-modality column in ASSIGNMENTS.md): `"choice"` for multiple-choice (also write `options: [...]`, the learner-visible choices ONLY — never the answer key), `"code"` for programming drills (also write `language`), `"file"` for document/project deliverables, `"text"` for short recall, and `"markdown"` (the default) for explanations, performance tasks, and essays. The app writes the learner's answer to `submissions/<id>.md` and points `submissionFile` at it; `assess-understanding` reads that.
   For a productive-failure task, add a `note` recording that a consolidation step is owed.
 - Set `current.phase = "assign"` (and keep `current.status = "in-progress"`).
 - Bump `updated` to today's date (`2026-06-17`).
