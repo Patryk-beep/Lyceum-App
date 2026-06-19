@@ -30,16 +30,19 @@ learning/
     ├── curriculum.md          # build-curriculum output (human-readable)
     ├── curriculum.json        # build-curriculum output (machine-readable)
     ├── placement.md           # placement-test transcript + result
+    ├── placement-items.json   # placement-test item pool (app machine output; optional)
     ├── lessons/
     │   └── 01-<module>.md      # one file per delivered lesson
     ├── assignments/
     │   └── 01-<module>-<type>.md   # brief + learner submission + feedback, one file
+    ├── quizzes/
+    │   └── <moduleId>-<unixSeconds>.json  # teach-lesson / assess-understanding checks (app machine output)
     ├── reviews.md             # human-readable review log (the queue lives in manifest)
     ├── progress.md            # running human-readable dashboard (format below)
     └── capstone.md            # capstone brief, milestones, evaluation
 ```
 
-`.md` files are for the human to read; `.json` files are the contract downstream skills parse. Keep them separate so prose never has to be parsed.
+`lessons/`, `assignments/`, and `quizzes/` are created up front by `learn` when the subject is set up, so every later skill finds the folder it writes into. `.md` files are for the human to read; `.json` files are the contract downstream skills parse. Keep them separate so prose never has to be parsed. The `placement-items.json` and `quizzes/*.json` files are **machine output written only when running inside the Lyceum desktop app** — the standalone plugin chain never requires them.
 
 ---
 
@@ -93,7 +96,7 @@ learning/
 ## Field notes that matter for correctness
 
 - **`scale.start`** — an integer 1–6, **or** the string `"test"` meaning "run `placement-test` to decide." `placement-test` **overwrites it with the chosen integer**, so downstream skills always read a number. **`scale.target`** is an integer 1–6. The resolved `scale.start` is the **single source of truth for curriculum scope**; `current.level` is just where the learner is now.
-- **`current.phase`** ∈ `teach | assign | assess | remediate | capstone` — written by the last skill so `learn` can resume mid-loop without re-deriving everything from files. **`current.status`** ∈ `not-started | in-progress | mastered | capstone | certified`.
+- **`current.phase`** ∈ `teach | assign | assess | remediate | capstone`, **or `null`** before any teaching skill has run — `learn` writes `null` at creation (no module exists yet); the phase is "written by the last skill" so `learn` can resume mid-loop without re-deriving everything from files. **`current.level`** is an integer 1–6 **or `null`** until it is resolved — a `"test"` start has no level until `placement-test` runs (`learn` writes `<start>` for a numeric start, else `null`). **`current.status`** ∈ `not-started | in-progress | mastered | capstone | certified`.
 - **`module.status`** ∈ `locked | available | in-progress | mastered`. A module is `available` only when all `prereqs` are `mastered` (this enforces the prerequisite graph). **`module.taught`** (bool) records that `teach-lesson` delivered it — distinct from mastery. When several modules become available at once, `current.moduleId` points to the **lowest level, then lowest id**.
 - **`module.masteryThreshold`** — default **per level** (see LEVELS.md §thresholds): **0.90** at L1–L2 (recall/procedural objectives), **0.85** at L3, and **rubric-referenced** at L4–L6 (store ~0.85 numerically but gate on the rubric, not a bare percentage). `build-curriculum` sets it; the gate lives in `assess-understanding`.
 - **`assignments[]`** tracks lifecycle so routing never parses prose: `status` ∈ `open` (created) → `submitted` (handed in) → `graded`. `create-assignment` appends `open`; `assess-understanding` sets `graded`. Submission is usually conversational — when the learner pastes an answer, `assess-understanding` triggers and first flips the relevant entry to `submitted`.

@@ -13,7 +13,7 @@ pub fn render_progress(manifest: &Manifest, next_action: &str, reviews_due: usiz
     out.push_str(&format!(
         "_Updated {} · Level {} of target {} · Status: {}_\n\n",
         crate::date::format_iso(manifest.updated),
-        manifest.current.level,
+        manifest.display_level(),
         manifest.scale.target,
         manifest.current.status.as_str(),
     ));
@@ -25,7 +25,7 @@ pub fn render_progress(manifest: &Manifest, next_action: &str, reviews_due: usiz
             m.id,
             m.title,
             m.level,
-            manifest.current.phase.as_str()
+            manifest.current.phase.map(|p| p.as_str()).unwrap_or("—")
         ),
         None => "—".to_string(),
     };

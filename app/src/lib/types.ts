@@ -184,9 +184,11 @@ export interface Manifest {
   updated: string;
   scale: { start: number | "test"; target: number };
   current: {
-    level: number;
+    // `level` and `phase` are omitted from the wire when null (a freshly-created
+    // subject has no phase yet; a "test" start has no level until placement).
+    level?: number;
     moduleId?: string;
-    phase: string;
+    phase?: string;
     status: string;
   };
   modules: Module[];

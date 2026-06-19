@@ -256,4 +256,48 @@ mod tests {
             other => panic!("expected corrupt, got {other:?}"),
         }
     }
+
+    #[test]
+    fn freshly_created_manifest_with_null_level_and_phase_parses() {
+        // REGRESSION: `learn` creates a subject with `current.phase: null` (no
+        // phase exists before any module) and, for a `"test"` start, `level: null`.
+        // The core MUST accept this — previously `phase: null` failed with
+        // "expected value" (transient=false), bricking every new subject.
+        let numeric_start = br#"{
+  "subject": "Learn how to Learn other things effectively",
+  "slug": "learn-how-to-learn-other-things-effectively",
+  "created": "2026-06-18",
+  "updated": "2026-06-18",
+  "scale": { "start": 2, "target": 5 },
+  "current": { "level": 2, "moduleId": null, "phase": null, "status": "not-started" },
+  "placement": null,
+  "modules": [],
+  "assignments": [],
+  "reviewQueue": [],
+  "calibration": { "predictions": 0, "hits": 0, "log": [] },
+  "certification": null,
+  "history": [],
+  "settings": { "scheduler": "leitner", "retentionTarget": 0.90, "sessionLengthMin": 30, "htmlTheme": "default" }
+}"#;
+        let m = parse(numeric_start).expect("fresh numeric-start manifest must parse");
+        assert_eq!(m.current.level, Some(2));
+        assert_eq!(m.current.phase, None);
+        assert_eq!(m.display_level(), 2);
+
+        // A "test" start has no level yet -> both null.
+        let test_start = br#"{
+  "subject": "x",
+  "slug": "x",
+  "created": "2026-06-18",
+  "updated": "2026-06-18",
+  "scale": { "start": "test", "target": 5 },
+  "current": { "level": null, "moduleId": null, "phase": null, "status": "not-started" },
+  "settings": { "scheduler": "leitner", "retentionTarget": 0.90, "sessionLengthMin": 30, "htmlTheme": "default" }
+}"#;
+        let m = parse(test_start).expect("fresh test-start manifest must parse");
+        assert_eq!(m.current.level, None);
+        assert_eq!(m.current.phase, None);
+        // Falls back to 1 before placement resolves a level.
+        assert_eq!(m.display_level(), 1);
+    }
 }

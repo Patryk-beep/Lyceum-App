@@ -16,7 +16,7 @@ Before doing anything, read these reference files (they carry the contracts and 
 - `${CLAUDE_PLUGIN_ROOT}/references/LEVELS.md` — the 6-level scale, so the capstone is scaled to `scale.target`.
 - `${CLAUDE_PLUGIN_ROOT}/references/ASSIGNMENTS.md` — the authentic task types (project, problem-based scenario, teach-it, capstone/portfolio) and the rubric conventions.
 
-Then read the active subject manifest at `learning/<slug>/manifest.json`. If no manifest exists (or it is unreadable), **STOP** and tell the user to run `lyceum:learn` first — never invent state. Resolve `<slug>` from the active subject; if more than one subject exists, confirm which one with the user.
+Then read the active subject manifest at `learning/<slug>/manifest.json`. If no manifest exists (or it is unreadable), **STOP** and tell the user to run `lyceum:learn` first — never invent state. If the manifest exists but `knowledge-map.json` is missing, STOP and tell the user to run `lyceum:research-topic` first — the capstone's driving question and deliverable are drawn from its `authenticTasks` and `levelDescriptors`. Resolve `<slug>` from the active subject; if more than one subject exists, confirm which one with the user.
 
 ## Process
 

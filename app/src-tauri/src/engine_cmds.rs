@@ -96,8 +96,11 @@ pub async fn create_subject(
         return Err(AppError::msg("subject title produced an empty slug"));
     }
     let today = workspace::today();
-    std::fs::create_dir_all(workspace::subject_dir(&state.workspace, &slug))
-        .map_err(|e| AppError::msg(e.to_string()))?;
+    // Scaffold the full per-subject skeleton (subject dir + lessons/assignments/
+    // quizzes) deterministically, so later skills find their folders regardless of
+    // what the headless `learn` turn writes.
+    let subject_dir = workspace::subject_dir(&state.workspace, &slug);
+    crate::service::scaffold_subject_dirs(&subject_dir).map_err(|e| AppError::msg(e.to_string()))?;
 
     let start_clause = if start.eq_ignore_ascii_case("test") {
         "run a placement test to decide the starting level (scale.start = \"test\")".to_string()

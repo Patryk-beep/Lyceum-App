@@ -35,12 +35,18 @@ export function RoadmapView({
   running?: boolean;
 }) {
   const currentId = manifest.current.moduleId;
+  // Mirror the core's `Manifest::display_level()`: explicit level, else a numeric
+  // scale.start, else 1 (a "test" start has no level until placement runs). The
+  // raw manifest omits `current.level` when it is null, so guard against undefined.
+  const displayLevel =
+    manifest.current.level ??
+    (typeof manifest.scale.start === "number" ? manifest.scale.start : 1);
   return (
     <div className="roadmap" data-testid="roadmap">
       <header className="roadmap__header">
         <h1>{manifest.subject}</h1>
         <div className="muted metric">
-          Level {manifest.current.level} → target {manifest.scale.target} ·{" "}
+          Level {displayLevel} → target {manifest.scale.target} ·{" "}
           {manifest.current.status}
         </div>
       </header>

@@ -53,10 +53,14 @@ pub fn subject_summary(manifest: &Manifest, disk: &DiskState, today: Date) -> Su
     SubjectSummary {
         slug: manifest.slug.clone(),
         subject: manifest.subject.clone(),
-        level: manifest.current.level,
+        level: manifest.display_level(),
         target: manifest.scale.target,
         status: manifest.current.status.as_str().to_string(),
-        phase: manifest.current.phase.as_str().to_string(),
+        phase: manifest
+            .current
+            .phase
+            .map(|p| p.as_str().to_string())
+            .unwrap_or_default(),
         modules_total,
         modules_mastered,
         mean_mastery,

@@ -157,7 +157,7 @@ pub fn analytics(manifest: &Manifest, today: Date) -> AnalyticsReport {
 
     AnalyticsReport {
         subject: manifest.subject.clone(),
-        level: manifest.current.level,
+        level: manifest.display_level(),
         target: manifest.scale.target,
         modules_total: manifest.modules.len(),
         modules_mastered,

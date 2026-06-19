@@ -17,7 +17,7 @@ Before doing anything else, read these reference files (resolve the plugin root 
 
 Then read the active subject manifest at `learning/<slug>/manifest.json`. Also read `knowledge-map.json` (for misconceptions and concept summaries) and `curriculum.json` (for the module's objectives) in the same folder.
 
-**If no manifest exists, STOP.** Do not teach anything. Tell the user to run `lyceum:learn` first to set up the workspace.
+**If no manifest exists, STOP.** Do not teach anything. Tell the user to run `lyceum:learn` first to set up the workspace. Likewise, if the manifest exists but `knowledge-map.json` is missing, STOP and tell the user to run `lyceum:research-topic` first; if `curriculum.json` is missing, STOP and route to `lyceum:build-curriculum`. Never teach from a half-built workspace — derive the required inputs from disk, never assume an earlier skill ran this session.
 
 Identify the module to teach: the module at `current.moduleId`. Confirm it is `available` or `in-progress` (its prereqs are mastered). If it is `locked`, stop and tell the user which prerequisite module must be mastered first.
 

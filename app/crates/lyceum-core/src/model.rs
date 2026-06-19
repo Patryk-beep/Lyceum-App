@@ -272,10 +272,18 @@ pub struct Scale {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Current {
-    pub level: u8,
+    /// Where the learner is now. `None` before it is resolved — a `scale.start`
+    /// of `"test"` has no level until `placement-test` runs. `learn` writes
+    /// `null` at creation; `placement-test`/`build-curriculum` set it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub module_id: Option<ModuleId>,
-    pub phase: Phase,
+    /// The active loop phase, `None` until a teaching skill sets it (per
+    /// MANIFEST.md: "written by the last skill"). `learn` writes `null` at
+    /// creation, before any module exists.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub phase: Option<Phase>,
     pub status: CurrentStatus,
 }
 
@@ -440,6 +448,21 @@ fn default_theme() -> String {
 }
 
 impl Manifest {
+    /// The learner's current level for display. Prefers the explicit
+    /// `current.level`; falls back to a numeric `scale.start`; and finally to
+    /// `1` for a `"test"`-start subject that has not been placed yet. Keeps the
+    /// summary/analytics/progress surfaces showing a sensible level before
+    /// `placement-test` resolves one.
+    pub fn display_level(&self) -> u8 {
+        self.current
+            .level
+            .or(match self.scale.start {
+                ScaleStart::Level(n) => Some(n),
+                ScaleStart::Test => None,
+            })
+            .unwrap_or(1)
+    }
+
     /// The module the learner is currently on, per `current.moduleId`.
     pub fn current_module(&self) -> Option<&Module> {
         let id = self.current.module_id.as_ref()?;

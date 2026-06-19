@@ -112,8 +112,7 @@ pub fn seed_demo(ws: &Path, today: Date) -> AppResult<String> {
         return Ok(slug); // idempotent
     }
 
-    std::fs::create_dir_all(dir.join("lessons"))?;
-    std::fs::create_dir_all(dir.join("assignments"))?;
+    scaffold_subject_dirs(&dir)?;
 
     // Side artifacts so DiskState is complete and routing behaves like a real course.
     std::fs::write(
@@ -144,6 +143,17 @@ pub fn seed_demo(ws: &Path, today: Date) -> AppResult<String> {
 pub fn ensure_workspace(ws: &Path) -> AppResult<()> {
     std::fs::create_dir_all(workspace::learning_dir(ws))
         .map_err(|e| AppError::msg(format!("cannot create workspace: {e}")))
+}
+
+/// Create the per-subject directory skeleton so every downstream skill finds the
+/// folders it writes into — `lessons/` (teach-lesson), `assignments/`
+/// (create-assignment), and `quizzes/` (teach-lesson + assess-understanding
+/// machine output). Idempotent; safe to call on an existing subject.
+pub fn scaffold_subject_dirs(dir: &Path) -> std::io::Result<()> {
+    for sub in ["lessons", "assignments", "quizzes"] {
+        std::fs::create_dir_all(dir.join(sub))?;
+    }
+    Ok(())
 }
 
 /// Derive a filesystem-safe slug from a subject title.
@@ -417,7 +427,7 @@ pub fn placement_finalize(
         evidence: Some(evidence),
     });
     manifest.scale.start = ScaleStart::Level(level);
-    manifest.current.level = level;
+    manifest.current.level = Some(level);
     store::save(&path, &mut manifest, today, &workspace::backup_stamp())?;
     Ok(manifest)
 }
@@ -453,7 +463,7 @@ mod m3_tests {
             date!(2026 - 06 - 18),
         )
         .unwrap();
-        assert_eq!(m.current.level, 3);
+        assert_eq!(m.current.level, Some(3));
         assert_eq!(m.placement.unwrap().recommended_level, Some(3));
         assert!(
             lyceum_core::validate::validate(&read_manifest(tmp.path(), &slug).unwrap()).is_empty()
@@ -467,6 +477,31 @@ mod m3_tests {
         let slug = seed_demo(tmp.path(), date!(2026 - 06 - 18)).unwrap();
         assert!(read_artifact(tmp.path(), &slug, "../../etc/passwd").is_err());
         assert!(read_artifact(tmp.path(), &slug, "research.md").is_ok());
+    }
+
+    #[test]
+    fn scaffold_creates_the_full_subject_skeleton() {
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path().join("learning").join("x");
+        scaffold_subject_dirs(&dir).unwrap();
+        for sub in ["lessons", "assignments", "quizzes"] {
+            assert!(dir.join(sub).is_dir(), "missing {sub}/");
+        }
+        // Idempotent: a second call on an existing skeleton succeeds.
+        scaffold_subject_dirs(&dir).unwrap();
+    }
+
+    #[test]
+    fn seed_demo_scaffolds_quizzes_dir() {
+        // REGRESSION: teach-lesson / assess-understanding write into quizzes/, which
+        // the demo (and every real subject) must provide up front.
+        let tmp = tempfile::tempdir().unwrap();
+        ensure_workspace(tmp.path()).unwrap();
+        let slug = seed_demo(tmp.path(), date!(2026 - 06 - 18)).unwrap();
+        let dir = workspace::subject_dir(tmp.path(), &slug);
+        for sub in ["lessons", "assignments", "quizzes"] {
+            assert!(dir.join(sub).is_dir(), "seed_demo did not create {sub}/");
+        }
     }
 }
 

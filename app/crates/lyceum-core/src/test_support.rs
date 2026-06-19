@@ -29,9 +29,9 @@ pub fn base_manifest() -> Manifest {
             target: 4,
         },
         current: Current {
-            level: 2,
+            level: Some(2),
             module_id: None,
-            phase: Phase::Teach,
+            phase: Some(Phase::Teach),
             status: CurrentStatus::InProgress,
         },
         placement: None,
@@ -67,9 +67,9 @@ pub fn golden_manifest() -> Manifest {
     m.created = date!(2026 - 06 - 10);
     m.updated = date!(2026 - 06 - 18);
     m.current = Current {
-        level: 2,
+        level: Some(2),
         module_id: Some(ModuleId("m02".into())),
-        phase: Phase::Assign,
+        phase: Some(Phase::Assign),
         status: CurrentStatus::InProgress,
     };
     m.placement = Some(Placement {
