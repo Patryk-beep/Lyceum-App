@@ -12,9 +12,11 @@ mod submit;
 mod workspace;
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use tauri::path::BaseDirectory;
 use tauri::Manager;
+use tokio::sync::Semaphore;
 
 use state::AppState;
 
@@ -74,6 +76,7 @@ pub fn run() {
                 preflight_error,
                 model: MODEL.to_string(),
                 sessions: Default::default(),
+                turn_slots: Arc::new(Semaphore::new(state::MAX_CONCURRENT_TURNS)),
             });
             Ok(())
         })
@@ -89,8 +92,7 @@ pub fn run() {
             commands::subject_analytics,
             commands::study_streak,
             commands::read_artifact,
-            commands::placement_pool,
-            commands::placement_step,
+            commands::submit_placement_answer,
             commands::placement_finalize,
             commands::get_levels,
             commands::list_lessons,

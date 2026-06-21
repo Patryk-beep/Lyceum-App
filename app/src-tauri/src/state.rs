@@ -3,9 +3,19 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use lyceum_engine::ClaudeSession;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, Semaphore};
+
+/// Max concurrent live `claude` turns across all subjects. The old single global
+/// lock bounded this implicitly; per-slug locks remove that bound, so a semaphore
+/// keeps the number of live children sane. ponytail: cap = 4, raise if users want
+/// more subjects running at once.
+pub const MAX_CONCURRENT_TURNS: usize = 4;
+
+/// One lazily-spawned warm `claude` child per subject, behind its own async lock.
+pub type SessionCell = Arc<Mutex<Option<ClaudeSession>>>;
 
 pub struct AppState {
     pub workspace: PathBuf,
@@ -16,13 +26,26 @@ pub struct AppState {
     /// Human-readable preflight failure, if any.
     pub preflight_error: Option<String>,
     pub model: String,
-    /// Warm `claude` child per subject slug (one isolated session each).
-    pub sessions: Mutex<HashMap<String, ClaudeSession>>,
+    /// Per-subject session cell. The OUTER map lock is held only to get-or-insert a
+    /// cell; the per-cell lock is held across a turn, so different subjects run
+    /// concurrently while same-subject turns serialize on the same cell.
+    pub sessions: Mutex<HashMap<String, SessionCell>>,
+    /// Bounds concurrent live turns (see [`MAX_CONCURRENT_TURNS`]).
+    pub turn_slots: Arc<Semaphore>,
 }
 
 impl AppState {
     /// Whether the Claude bridge is usable (binary + plugin both resolved).
     pub fn engine_ready(&self) -> bool {
         self.claude_bin.is_some() && self.staged_plugin.is_some()
+    }
+
+    /// Get (or lazily create) the session cell for `slug`, holding the map lock only
+    /// for the entry/clone (never across a turn).
+    pub async fn session_cell(&self, slug: &str) -> SessionCell {
+        let mut map = self.sessions.lock().await;
+        map.entry(slug.to_string())
+            .or_insert_with(|| Arc::new(Mutex::new(None)))
+            .clone()
     }
 }

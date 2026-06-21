@@ -30,7 +30,8 @@ learning/
     ├── curriculum.md          # build-curriculum output (human-readable)
     ├── curriculum.json        # build-curriculum output (machine-readable)
     ├── placement.md           # placement-test transcript + result
-    ├── placement-items.json   # placement-test item pool (app machine output; optional)
+    ├── placement-state.json   # interactive placement run state, skill-owned (app machine output; optional)
+    ├── placement-answer.json  # learner's latest typed placement answer, app-owned (app machine output; optional)
     ├── lessons/
     │   └── 01-<module>.md      # one file per delivered lesson
     ├── assignments/
@@ -39,12 +40,14 @@ learning/
     │   └── a01.md                  # the Lyceum app's student hand-ins (app machine output)
     ├── quizzes/
     │   └── <moduleId>-<unixSeconds>.json  # teach-lesson / assess-understanding checks (app machine output)
+    ├── assets/
+    │   └── m03-1.svg          # lesson graphics — hand-authored SVG, served via read_artifact (see GRAPHICS.md)
     ├── reviews.md             # human-readable review log (the queue lives in manifest)
     ├── progress.md            # running human-readable dashboard (format below)
     └── capstone.md            # capstone brief, milestones, evaluation
 ```
 
-`lessons/`, `assignments/`, `quizzes/`, and `submissions/` are created up front (by `learn`, and by the Lyceum app when it scaffolds a subject), so every later skill finds the folder it writes into. `.md` files are for the human to read; `.json` files are the contract downstream skills parse. Keep them separate so prose never has to be parsed. The `placement-items.json`, `quizzes/*.json`, and `submissions/*.md` files are **written only when running inside the Lyceum desktop app** — the standalone plugin chain never requires them (it keeps the learner's submission inline in the assignment brief instead).
+`lessons/`, `assignments/`, `quizzes/`, `submissions/`, and `assets/` are created up front (by `learn`, and by the Lyceum app when it scaffolds a subject), so every later skill finds the folder it writes into. `assets/` holds hand-authored lesson SVGs — the only image format the app can serve (see GRAPHICS.md). `.md` files are for the human to read; `.json` files are the contract downstream skills parse. Keep them separate so prose never has to be parsed. The `placement-state.json` / `placement-answer.json`, `quizzes/*.json`, and `submissions/*.md` files are **written only when running inside the Lyceum desktop app** — the standalone plugin chain never requires them (it runs placement as a conversation and keeps the learner's submission inline in the assignment brief instead).
 
 ---
 
@@ -98,7 +101,8 @@ learning/
 
 ## Field notes that matter for correctness
 
-- **`scale.start`** — an integer 1–6, **or** the string `"test"` meaning "run `placement-test` to decide." `placement-test` **overwrites it with the chosen integer**, so downstream skills always read a number. **`scale.target`** is an integer 1–6. The resolved `scale.start` is the **single source of truth for curriculum scope**; `current.level` is just where the learner is now.
+- **`scale.start`** — an integer 1–6, **or** the string `"test"` meaning "run `placement-test` to decide." It is **overwritten with the chosen integer** once placement resolves, so downstream skills always read a number. In the standalone chain `placement-test` writes it directly; in the **Lyceum app** placement is interactive (the skill decides `recommendedLevel` in `placement-state.json` and the app commits `scale.start` + `current.level` + the `placement{}` block when the learner accepts). Either way the router keys off `placement.taken`, not the `"test"` sentinel. **`scale.target`** is an integer 1–6. The resolved `scale.start` is the **single source of truth for curriculum scope**; `current.level` is just where the learner is now.
+- **Interactive placement (Lyceum app only)** uses two machine files in the subject folder: **`placement-state.json`** is *skill-owned* (the running test — `asked`, `maxQuestions`, the `current` question, `history`, and on completion `done`/`recommendedLevel`/`rationale`); **`placement-answer.json`** is *app-owned* (`{ id, answer }`, the learner's latest typed answer, graded only when its `id` matches `current.id`). The skill writes neither the manifest nor `scale.start` mid-run; the app commits the level on finalize. See PLACEMENT.md.
 - **`current.phase`** ∈ `teach | assign | assess | remediate | capstone`, **or `null`** before any teaching skill has run — `learn` writes `null` at creation (no module exists yet); the phase is "written by the last skill" so `learn` can resume mid-loop without re-deriving everything from files. **`current.level`** is an integer 1–6 **or `null`** until it is resolved — a `"test"` start has no level until `placement-test` runs (`learn` writes `<start>` for a numeric start, else `null`). **`current.status`** ∈ `not-started | in-progress | mastered | capstone | certified`.
 - **`module.status`** ∈ `locked | available | in-progress | mastered`. A module is `available` only when all `prereqs` are `mastered` (this enforces the prerequisite graph). **`module.taught`** (bool) records that `teach-lesson` delivered it — distinct from mastery. When several modules become available at once, `current.moduleId` points to the **lowest level, then lowest id**.
 - **`module.masteryThreshold`** — default **per level** (see LEVELS.md §thresholds): **0.90** at L1–L2 (recall/procedural objectives), **0.85** at L3, and **rubric-referenced** at L4–L6 (store ~0.85 numerically but gate on the rubric, not a bare percentage). `build-curriculum` sets it; the gate lives in `assess-understanding`.

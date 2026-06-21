@@ -15,6 +15,7 @@ Before doing anything, read these reference files (they carry the rules this ski
 - `${CLAUDE_PLUGIN_ROOT}/references/REFERENCE.md` — the ten pedagogical principles (retrieval, interleaving, deliberate practice, desirable difficulty, productive-failure consolidation).
 - `${CLAUDE_PLUGIN_ROOT}/references/LEVELS.md` — the 6-level scale, Bloom verb bank, and per-level mastery context.
 - `${CLAUDE_PLUGIN_ROOT}/references/ASSIGNMENTS.md` — the task-type catalog, the single-point analytic rubric, productive-failure phases, and difficulty calibration.
+- `${CLAUDE_PLUGIN_ROOT}/references/GRAPHICS.md` — the graphics output contract, for any visual in the brief (table/KaTeX/ASCII/mermaid/SVG; no raster or remote URLs; math is `$$…$$` only).
 
 Then read the active subject manifest at `learning/<slug>/manifest.json`. If no manifest exists (or it is unreadable), STOP and tell the user to run `lyceum:learn` first — this skill never creates the workspace and never assumes another skill ran this session.
 
@@ -61,6 +62,7 @@ Do **NOT** write `objective.mastery`, `module.status`, or `current.status` level
 - **Never reveal answers before an attempt.** Keep the answer key, worked solution, or rubric off-bands entirely OUT of the learner-visible file — hold them for `assess-understanding`. If you must record solution notes, do not put them where the learner reads them.
 - **Mastery is read-only.** Do not touch `objective.mastery` or module/level status.
 - **State, not conversation.** Read the manifest first, act, write it last (bump `updated`). Never assume `teach-lesson` ran this session — confirm from disk.
+- **Graphics follow GRAPHICS.md.** Any visual in the brief uses a supported channel (table/KaTeX `$$…$$`/ASCII/mermaid/`assets/` SVG) — never raster or remote-URL images, which the app can't serve.
 - **Allocate, never reuse, ids.** Assignment id = max existing suffix + 1.
 - **Always interleave and always withhold answers until an attempt** (ASSIGNMENTS.md default policy).
 - **Productive-failure tasks must flag the owed consolidation** in both the brief and the `assignments[]` note, or do not use that task type.

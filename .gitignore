@@ -25,3 +25,6 @@ target/
 /PLAN.md
 /QUESTIONS-FOR-REVIEW.md
 /SESSION-HANDOFF.md
+
+# Tooling cruft (claude-flow / ruflo session + data artifacts)
+.claude-flow/

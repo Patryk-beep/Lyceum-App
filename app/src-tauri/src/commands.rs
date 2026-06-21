@@ -143,17 +143,16 @@ pub fn submit_capstone(
     crate::submit::submit_capstone(&state.workspace, &slug, &content, workspace::today())
 }
 
+/// Hand in the learner's typed answer to the current interactive-placement question.
+/// Writes the app-owned `placement-answer.json`; the next placement step grades it.
 #[tauri::command]
-pub fn placement_pool(
+pub fn submit_placement_answer(
     state: State<AppState>,
     slug: String,
-) -> AppResult<lyceum_core::placement::PlacementPool> {
-    service::placement_pool(&state.workspace, &slug)
-}
-
-#[tauri::command]
-pub fn placement_step(answers: Vec<bool>) -> service::PlacementStateDto {
-    service::placement_step(&answers)
+    id: String,
+    answer: String,
+) -> AppResult<()> {
+    crate::submit::submit_placement_answer(&state.workspace, &slug, &id, &answer)
 }
 
 #[tauri::command]

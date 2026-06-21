@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 import { api } from "../lib/ipc";
+import { RichMarkdown } from "./RichMarkdown";
 
 /** Renders a subject markdown artifact (research / lesson / curriculum / capstone). */
 export function ArtifactView({
@@ -30,7 +29,7 @@ export function ArtifactView({
 
   return (
     <article className="reader" data-testid="artifact">
-      <Markdown remarkPlugins={[remarkGfm]}>{data ?? ""}</Markdown>
+      <RichMarkdown slug={slug}>{data ?? ""}</RichMarkdown>
     </article>
   );
 }

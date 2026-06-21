@@ -3,8 +3,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { CreationProgress } from "../components/CreationProgress";
 import { api } from "../lib/ipc";
-import { useEngineStore } from "../stores/useEngineStore";
+import { slugify } from "../lib/slug";
+import { useEngineStore, useRun } from "../stores/useEngineStore";
 
 const LEVELS = [
   { v: "1", label: "1 · Aware" },
@@ -23,9 +25,14 @@ export function SubjectWizard() {
   const [start, setStart] = useState("test");
   const [target, setTarget] = useState("3");
 
+  // The backend slug is derived from the title; mirror it so we can subscribe this
+  // creation's live run before create_subject returns the canonical slug.
+  const slug = slugify(subject.trim());
+  const run = useRun(slug);
+
   const create = useMutation({
     mutationFn: () => api.createSubject(subject.trim(), Number(target), start),
-    onMutate: () => engineStart(),
+    onMutate: () => engineStart(slug),
     onSuccess: (slug) => {
       qc.invalidateQueries({ queryKey: ["subjects"] });
       navigate(`/subject/${slug}`);
@@ -92,6 +99,10 @@ export function SubjectWizard() {
       >
         {create.isPending ? "Setting up…" : "Create subject"}
       </button>
+
+      {create.isPending && (
+        <CreationProgress start={start} done={run.milestones} status={run.status} />
+      )}
 
       {create.isError && (
         <div className="diag-error">{String(create.error)}</div>

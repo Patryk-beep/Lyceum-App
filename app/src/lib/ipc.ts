@@ -5,8 +5,6 @@ import type {
   DeleteLessonResult,
   LessonEntry,
   Manifest,
-  PlacementPool,
-  PlacementState,
   ReviewCandidate,
   ReviewGrade,
   RouteDto,
@@ -37,10 +35,10 @@ export const api = {
   studyStreak: () => invoke<StreakInfo>("study_streak"),
   readArtifact: (slug: string, relpath: string) =>
     invoke<string>("read_artifact", { slug, relpath }),
-  placementPool: (slug: string) =>
-    invoke<PlacementPool>("placement_pool", { slug }),
-  placementStep: (answers: boolean[]) =>
-    invoke<PlacementState>("placement_step", { answers }),
+  // Interactive placement: the app hands in the learner's typed answer; the next
+  // engine step grades it. The level is committed via placementFinalize when done.
+  submitPlacementAnswer: (slug: string, id: string, answer: string) =>
+    invoke<void>("submit_placement_answer", { slug, id, answer }),
   placementFinalize: (slug: string, level: number, evidence: string) =>
     invoke<Manifest>("placement_finalize", { slug, level, evidence }),
   listLessons: (slug: string) => invoke<LessonEntry[]>("list_lessons", { slug }),

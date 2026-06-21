@@ -148,10 +148,11 @@ pub fn ensure_workspace(ws: &Path) -> AppResult<()> {
 /// Create the per-subject directory skeleton so every downstream skill finds the
 /// folders it writes into — `lessons/` (teach-lesson), `assignments/`
 /// (create-assignment), `quizzes/` (teach-lesson + assess-understanding machine
-/// output), and `submissions/` (the app's student hand-ins). Idempotent; safe to
-/// call on an existing subject.
+/// output), `submissions/` (the app's student hand-ins), and `assets/` (lesson
+/// graphics — hand-authored `.svg` files served via `read_artifact`). Idempotent;
+/// safe to call on an existing subject.
 pub fn scaffold_subject_dirs(dir: &Path) -> std::io::Result<()> {
-    for sub in ["lessons", "assignments", "quizzes", "submissions"] {
+    for sub in ["lessons", "assignments", "quizzes", "submissions", "assets"] {
         std::fs::create_dir_all(dir.join(sub))?;
     }
     Ok(())
@@ -369,46 +370,11 @@ pub fn read_artifact(ws: &Path, slug: &str, relpath: &str) -> AppResult<String> 
     std::fs::read_to_string(&path).map_err(|e| AppError::msg(format!("{}: {e}", path.display())))
 }
 
-pub fn placement_pool(ws: &Path, slug: &str) -> AppResult<lyceum_core::placement::PlacementPool> {
-    let path = workspace::subject_dir(ws, slug).join("placement-items.json");
-    let bytes = std::fs::read(&path)
-        .map_err(|_| AppError::msg("no placement-items.json yet — run the placement step first"))?;
-    Ok(serde_json::from_slice(&bytes)?)
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PlacementStateDto {
-    pub done: bool,
-    pub next_tier: Option<u8>,
-    pub recommended_level: Option<u8>,
-    pub asked: usize,
-}
-
-/// Replay the deterministic adaptive loop from the answer history (stateless).
-pub fn placement_step(answers: &[bool]) -> PlacementStateDto {
-    let mut s = lyceum_core::placement::PlacementSession::new();
-    for &a in answers {
-        if s.is_done() {
-            break;
-        }
-        s.record(a);
-    }
-    let done = s.is_done();
-    PlacementStateDto {
-        done,
-        next_tier: s.next_tier(),
-        recommended_level: if done {
-            Some(s.recommended_level())
-        } else {
-            None
-        },
-        asked: s.asked(),
-    }
-}
-
 /// Write the placement result (app-writable: scope/nav, NOT mastery): set the
-/// `placement{}` block, overwrite `scale.start`, and set `current.level`.
+/// `placement{}` block, overwrite `scale.start`, and set `current.level`. The
+/// interactive placement-test skill DECIDES the level (`recommendedLevel` in
+/// `placement-state.json`); the app COMMITS it here — placement stays app-writable,
+/// mastery never is.
 pub fn placement_finalize(
     ws: &Path,
     slug: &str,
@@ -417,6 +383,16 @@ pub fn placement_finalize(
     today: Date,
 ) -> AppResult<Manifest> {
     use lyceum_core::model::{Placement, ScaleStart};
+    // Validate at the boundary: the level is LLM-authored (the skill's
+    // `recommendedLevel`). `ScaleStart` only enforces 1..=6 on *deserialize*, so an
+    // out-of-range value would serialize fine here and then make the very next
+    // `store::load` reject the manifest as corrupt — bricking the subject. Reject it
+    // before writing anything.
+    if !(1..=6).contains(&level) {
+        return Err(AppError::msg(format!(
+            "placement level {level} out of range 1..=6"
+        )));
+    }
     let path = workspace::manifest_path(ws, slug);
     let mut manifest = store::load(&path)?;
     manifest.placement = Some(Placement {
@@ -428,6 +404,14 @@ pub fn placement_finalize(
     manifest.scale.start = ScaleStart::Level(level);
     manifest.current.level = Some(level);
     store::save(&path, &mut manifest, today, &workspace::backup_stamp())?;
+    // The interactive run is over — best-effort remove its coordination files so a
+    // finalized subject starts clean (and a future re-take can't grade a stale answer
+    // whose positional id (`q1`) collides with a fresh question).
+    for f in ["placement-answer.json", "placement-state.json"] {
+        if let Ok(p) = crate::delete::contained_path(ws, slug, f) {
+            let _ = std::fs::remove_file(p);
+        }
+    }
     Ok(manifest)
 }
 
@@ -435,19 +419,6 @@ pub fn placement_finalize(
 mod m3_tests {
     use super::*;
     use time::macros::date;
-
-    #[test]
-    fn placement_step_replays_to_completion() {
-        // 10 incorrect answers -> done, recommend level 1.
-        let answers = vec![false; 10];
-        let st = placement_step(&answers);
-        assert!(st.done);
-        assert_eq!(st.recommended_level, Some(1));
-        // empty -> first tier 4 (round(3.5)).
-        let st0 = placement_step(&[]);
-        assert!(!st0.done);
-        assert_eq!(st0.next_tier, Some(4));
-    }
 
     #[test]
     fn placement_finalize_sets_scale_and_validates() {
@@ -470,6 +441,29 @@ mod m3_tests {
     }
 
     #[test]
+    fn placement_finalize_rejects_out_of_range_level() {
+        // The level is LLM-authored; an out-of-range value must be refused at the
+        // boundary, not serialized into a manifest that won't re-load.
+        let tmp = tempfile::tempdir().unwrap();
+        ensure_workspace(tmp.path()).unwrap();
+        let slug = seed_demo(tmp.path(), date!(2026 - 06 - 18)).unwrap();
+        let before = read_manifest(tmp.path(), &slug).unwrap();
+        for bad in [0u8, 7, 250] {
+            assert!(
+                placement_finalize(tmp.path(), &slug, bad, "x".into(), date!(2026 - 06 - 18))
+                    .is_err(),
+                "level {bad} must be rejected"
+            );
+        }
+        // Nothing was written, and the manifest still re-loads cleanly.
+        let after = read_manifest(tmp.path(), &slug).unwrap();
+        assert_eq!(
+            after.updated, before.updated,
+            "no write on a rejected level"
+        );
+    }
+
+    #[test]
     fn read_artifact_blocks_traversal() {
         let tmp = tempfile::tempdir().unwrap();
         ensure_workspace(tmp.path()).unwrap();
@@ -483,7 +477,7 @@ mod m3_tests {
         let tmp = tempfile::tempdir().unwrap();
         let dir = tmp.path().join("learning").join("x");
         scaffold_subject_dirs(&dir).unwrap();
-        for sub in ["lessons", "assignments", "quizzes", "submissions"] {
+        for sub in ["lessons", "assignments", "quizzes", "submissions", "assets"] {
             assert!(dir.join(sub).is_dir(), "missing {sub}/");
         }
         // Idempotent: a second call on an existing skeleton succeeds.
@@ -498,7 +492,7 @@ mod m3_tests {
         ensure_workspace(tmp.path()).unwrap();
         let slug = seed_demo(tmp.path(), date!(2026 - 06 - 18)).unwrap();
         let dir = workspace::subject_dir(tmp.path(), &slug);
-        for sub in ["lessons", "assignments", "quizzes", "submissions"] {
+        for sub in ["lessons", "assignments", "quizzes", "submissions", "assets"] {
             assert!(dir.join(sub).is_dir(), "seed_demo did not create {sub}/");
         }
     }

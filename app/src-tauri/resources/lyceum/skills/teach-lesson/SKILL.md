@@ -14,6 +14,7 @@ Before doing anything else, read these reference files (resolve the plugin root 
 - `${CLAUDE_PLUGIN_ROOT}/references/MANIFEST.md` — the state contract, manifest schema, ID-allocation rule, the single-writer rule, and the `progress.md` format.
 - `${CLAUDE_PLUGIN_ROOT}/references/REFERENCE.md` — the ten pedagogical principles (dual coding, retrieval, self-explanation, hint ladder, spacing) and the Leitner schedule.
 - `${CLAUDE_PLUGIN_ROOT}/references/LEVELS.md` — the 6-level scale; use it to calibrate vocabulary and depth to the module's level.
+- `${CLAUDE_PLUGIN_ROOT}/references/GRAPHICS.md` — the graphics output contract: which format to use (table ≈ KaTeX > ASCII > mermaid > hand-SVG), the `$$…$$` math rule, the `assets/` path + naming, and the no-raster/no-external guardrails. **Every visual you emit follows it.**
 
 Then read the active subject manifest at `learning/<slug>/manifest.json`. Also read `knowledge-map.json` (for misconceptions and concept summaries) and `curriculum.json` (for the module's objectives) in the same folder.
 
@@ -27,7 +28,7 @@ Identify the module to teach: the module at `current.moduleId`. Confirm it is `a
 
 2. **Lead with the concrete, then the principle.** For each idea, open with a concrete worked example or a manipulable problem the learner can reason about, THEN generalize to the principle. Never lead with the abstraction.
 
-3. **Dual-code every idea.** Pair each idea with an informative visual, diagram, or worked example that *carries information* — never decoration. Use the concept summaries from `knowledge-map.json` to keep examples faithful to the subject.
+3. **Dual-code every idea.** Pair each idea with an informative visual, diagram, or worked example that *carries information* — never decoration. Use the concept summaries from `knowledge-map.json` to keep examples faithful to the subject. **Choose the visual format per GRAPHICS.md** — reach for the most reliable rung that carries the idea: a GFM table or KaTeX `$$…$$` block first, then ASCII/Unicode, then a ` ```mermaid ` diagram for genuine flows/sequences, and only as a last resort a hand-authored `.svg` in `assets/`. Never emit raster (PNG/JPG) or remote image URLs — the app can't serve them and they'll show as a bare caption.
 
 4. **Flag misconceptions explicitly.** For each concept in this module, pull its known misconceptions from `knowledge-map.json` (`misconceptions[]`) and call them out by name: state the misconception, why it is tempting, and the correction.
 
@@ -39,7 +40,7 @@ Identify the module to teach: the module at `current.moduleId`. Confirm it is `a
 
 8. **Seed the review queue.** Turn the module's key facts and procedures into discrete retrieval items (prompt + answer). For each, append a new entry to `reviewQueue` with: a fresh `itemId` (max existing numeric suffix + 1, e.g. `r014` → `r015`), the `prompt` and `answer`, the `moduleId`, `box: 1`, `due` = tomorrow (today + 1 day), `lastResult: null`, `lapses: 0`. These are the spaced-review seeds; their schedule is owned by `review-session` from here on.
 
-9. **Write the lesson file.** Save the full lesson (examples, visuals, checks, misconception flags, and the comparison summary) to `lessons/NN-<module>.md`, where `NN` is the zero-padded module number and `<module>` is a short slug of the module title.
+9. **Write the lesson file.** Save the full lesson (examples, visuals, checks, misconception flags, and the comparison summary) to `lessons/NN-<module>.md`, where `NN` is the zero-padded module number and `<module>` is a short slug of the module title. If the lesson includes any hand-authored `.svg` file graphics, first `mkdir -p learning/<slug>/assets` and `rm -f learning/<slug>/assets/<moduleId>-*.svg` (so a re-teach overwrites this module's graphics rather than orphaning the old set), then write each SVG as `assets/<moduleId>-<n>.svg` and reference it from the lesson as `![informative alt](assets/<moduleId>-<n>.svg)` — subject-root-relative, never `../`, per GRAPHICS.md.
 
 ## State writes
 
@@ -60,6 +61,7 @@ Then rewrite `progress.md` in the exact format defined in MANIFEST.md (header li
 - **Never end the hint ladder in the full answer.** Escalate pump → hint → prompt and let the learner close the last step.
 - **Allocate review-item ids as (max existing numeric suffix) + 1.** Never reuse an `r-id`.
 - **Lead concrete, flag misconceptions, dual-code.** These are the non-negotiable teaching moves, not optional flourishes.
+- **Graphics follow GRAPHICS.md.** No raster or remote-URL images (the app can't serve them); math is `$$…$$` only (bare `$` is not math — escape currency as `\$`); file SVGs go in `assets/` named `<moduleId>-<n>.svg` and are referenced subject-root-relative, never `../`. Always give an image informative alt text — it doubles as the fallback.
 - **State, not conversation.** You read the manifest at the start and write it at the end; never assume another skill ran this session. Keep `manifest.json` valid JSON at all times.
 
 ## Machine output (for the Lyceum app)

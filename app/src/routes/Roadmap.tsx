@@ -105,7 +105,7 @@ export function Roadmap() {
 
   const step = useMutation({
     mutationFn: () => api.runSubjectStep(slug),
-    onMutate: () => engineStart(),
+    onMutate: () => engineStart(slug),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["manifest", slug] });
       qc.invalidateQueries({ queryKey: ["subjects"] });
@@ -147,7 +147,7 @@ export function Roadmap() {
           onConfirm={() =>
             reset.mutate(undefined, {
               onSuccess: () => {
-                useEngineStore.getState().reset();
+                useEngineStore.getState().reset(slug);
                 setConfirmingReset(false);
               },
             })

@@ -68,23 +68,33 @@ export interface AnalyticsReport {
   history: { date: string; skill: string; event: string; result: string }[];
 }
 
-export interface PlacementItem {
+/** One question in the interactive placement run (skill-owned `placement-state.json`). */
+export interface PlacementQuestion {
   id: string;
-  tier: number;
-  stem: string;
-  scoringKey: string;
-  type: string;
+  tier?: number;
+  question: string;
 }
 
-export interface PlacementPool {
-  items: PlacementItem[];
+export interface PlacementHistoryItem {
+  id: string;
+  question: string;
+  answer: string;
+  verdict: string; // "correct" | "partial" | "incorrect"
+  feedback: string;
 }
 
+/** The skill-owned `placement-state.json` the app reads to render the test. The app
+ *  never writes this — it writes the learner's answer to `placement-answer.json` and
+ *  commits the level (from `recommendedLevel`) via `placement_finalize` when `done`. */
 export interface PlacementState {
-  done: boolean;
-  nextTier: number | null;
-  recommendedLevel: number | null;
   asked: number;
+  maxQuestions: number;
+  current: PlacementQuestion | null;
+  lastFeedback: string | null;
+  history: PlacementHistoryItem[];
+  done: boolean;
+  recommendedLevel: number | null;
+  rationale: string | null;
 }
 
 export interface StreakInfo {
@@ -152,8 +162,16 @@ export type BridgeEvent =
         costUsdListPrice: number;
       };
     }
+  | { kind: "milestone"; data: { phase: string } }
   | { kind: "warning"; data: { message: string } }
   | { kind: "fatal"; data: { kind: string; message: string } };
+
+/** Mirrors the Rust `SessionEnvelope` — a `BridgeEvent` tagged with its subject slug
+ *  so the webview can key live run-state per subject. */
+export interface SessionEnvelope {
+  slug: string;
+  event: BridgeEvent;
+}
 
 // --- Partial manifest shape (enough for views; full type arrives with ts-rs). ---
 

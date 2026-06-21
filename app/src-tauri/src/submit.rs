@@ -127,6 +127,23 @@ pub fn submit_capstone(ws: &Path, slug: &str, content: &str, today: Date) -> App
     Ok(manifest)
 }
 
+/// Hand in the learner's typed answer to the current interactive-placement question.
+/// Writes the **app-owned** `placement-answer.json` (`{ id, answer }`); the next
+/// placement-test turn grades it (matching on `id == current.id`, so a stale answer
+/// is ignored) and folds it into its own `placement-state.json`. NO manifest write —
+/// placement only lands in the manifest at `placement_finalize`, after the skill
+/// decides the level. The path is contained to the subject folder.
+pub fn submit_placement_answer(ws: &Path, slug: &str, id: &str, answer: &str) -> AppResult<()> {
+    validate_slug(slug)?;
+    let path = contained_path(ws, slug, "placement-answer.json")?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let body = serde_json::to_string_pretty(&serde_json::json!({ "id": id, "answer": answer }))?;
+    std::fs::write(&path, body)?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -234,5 +251,60 @@ mod tests {
         // No certification fabricated by the app.
         assert!(after.certification.is_none());
         assert!(validate::validate(&after).is_empty());
+    }
+
+    #[test]
+    fn submit_placement_answer_writes_app_owned_file() {
+        let (tmp, slug) = seeded();
+        let before = read_manifest(tmp.path(), &slug).unwrap();
+
+        submit_placement_answer(tmp.path(), &slug, "q3", "spaced repetition").unwrap();
+
+        // Reads back through the artifact guard as `{ id, answer }`.
+        let raw = read_artifact(tmp.path(), &slug, "placement-answer.json").unwrap();
+        let v: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(v["id"], "q3");
+        assert_eq!(v["answer"], "spaced repetition");
+
+        // App-owned answer file never touches the manifest (no placement commit here;
+        // placement only lands in the manifest at `placement_finalize`).
+        let after = read_manifest(tmp.path(), &slug).unwrap();
+        assert_eq!(after.updated, before.updated, "manifest untouched");
+        assert_eq!(
+            after.placement, before.placement,
+            "placement block untouched"
+        );
+    }
+
+    #[test]
+    fn submit_placement_answer_overwrites_prior_answer() {
+        let (tmp, slug) = seeded();
+        submit_placement_answer(tmp.path(), &slug, "q1", "first").unwrap();
+        submit_placement_answer(tmp.path(), &slug, "q2", "second").unwrap();
+        let raw = read_artifact(tmp.path(), &slug, "placement-answer.json").unwrap();
+        let v: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(v["id"], "q2", "latest answer wins (one file, last-writer)");
+        assert_eq!(v["answer"], "second");
+    }
+
+    #[test]
+    fn submit_placement_answer_rejects_bad_slug() {
+        let (tmp, _slug) = seeded();
+        assert!(submit_placement_answer(tmp.path(), "../escape", "q1", "x").is_err());
+    }
+
+    #[test]
+    fn submit_placement_answer_round_trips_special_characters() {
+        // The answer is arbitrary learner text; the JSON encoding must survive quotes,
+        // newlines, backslashes, and unicode so the skill can parse it back verbatim.
+        let (tmp, slug) = seeded();
+        let answer = "she said \"hola\"\nline2\tpath C:\\x — café ☕";
+        submit_placement_answer(tmp.path(), &slug, "q1", answer).unwrap();
+        let raw = read_artifact(tmp.path(), &slug, "placement-answer.json").unwrap();
+        let v: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(
+            v["answer"], answer,
+            "answer survives JSON round-trip verbatim"
+        );
     }
 }

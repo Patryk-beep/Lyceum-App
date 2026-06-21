@@ -1,8 +1,7 @@
 import { useRef, useState } from "react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 import type { InputType } from "../lib/types";
+import { RichMarkdown } from "./RichMarkdown";
 
 // Basic markdown toolbar: selection-wrapping for inline marks, line-prefix for
 // block marks. ponytail: enough "basic editing tools" without an editor library.
@@ -29,15 +28,25 @@ export function SubmissionEditor({
   options = [],
   language,
   busy = false,
+  submitLabel = "Submit hand-in",
   onSubmit,
+  value,
+  onChange,
 }: {
   inputType?: InputType;
   options?: string[];
   language?: string;
   busy?: boolean;
+  submitLabel?: string;
   onSubmit: (content: string) => void;
+  // Controlled mode: when a parent (ZenEditor) supplies both, the draft lives there
+  // so it survives the inline↔zen remount. Absent ⇒ uncontrolled (the default).
+  value?: string;
+  onChange?: (s: string) => void;
 }) {
-  const [content, setContent] = useState("");
+  const [internal, setInternal] = useState("");
+  const content = value ?? internal;
+  const setContent = onChange ?? setInternal;
   const [preview, setPreview] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -135,9 +144,7 @@ export function SubmissionEditor({
           )}
           {isMarkdown && preview ? (
             <article className="reader submission__preview" data-testid="submission-preview">
-              <Markdown remarkPlugins={[remarkGfm]}>
-                {content || "_Nothing to preview yet._"}
-              </Markdown>
+              <RichMarkdown>{content || "_Nothing to preview yet._"}</RichMarkdown>
               <button
                 type="button"
                 className="btn btn--ghost submission__tool"
@@ -177,7 +184,7 @@ export function SubmissionEditor({
         disabled={!canSubmit}
         onClick={() => onSubmit(content)}
       >
-        {busy ? "Submitting…" : "Submit hand-in"}
+        {busy ? "Submitting…" : submitLabel}
       </button>
     </div>
   );

@@ -19,7 +19,6 @@ pub mod error;
 pub mod ids;
 pub mod mastery;
 pub mod model;
-pub mod placement;
 pub mod progress;
 pub mod routing;
 pub mod srs;

@@ -8,6 +8,7 @@ import { api } from "../lib/ipc";
 import { useSubjects } from "../lib/query";
 import { useEngineStore } from "../stores/useEngineStore";
 import { useThemeStore, type ThemeName } from "../stores/useThemeStore";
+import { useZenStore } from "../stores/useZenStore";
 import { parseSubjectRoute } from "../theme/loop";
 
 interface PaletteItem {
@@ -61,6 +62,10 @@ export function CommandPalette({
   const { data: subjects } = useSubjects();
   const setTheme = useThemeStore((s) => s.setTheme);
   const engineStart = useEngineStore((s) => s.start);
+  const zenAvailable = useZenStore((s) => s.available);
+  const zenActive = useZenStore((s) => s.active);
+  const zenSetActive = useZenStore((s) => s.setActive);
+  const zenToggleBrief = useZenStore((s) => s.toggleBrief);
   const qc = useQueryClient();
   const [query, setQuery] = useState("");
 
@@ -70,7 +75,7 @@ export function CommandPalette({
 
   const step = useMutation({
     mutationFn: (s: string) => api.runSubjectStep(s),
-    onMutate: () => engineStart(),
+    onMutate: (s) => engineStart(s),
     onSuccess: (_d, s) => {
       for (const k of ["manifest", "review", "analytics"])
         qc.invalidateQueries({ queryKey: [k, s] });
@@ -131,6 +136,26 @@ export function CommandPalette({
       label: "Open capstone",
       keywords: "capstone final project deliverable",
       run: () => go(`/subject/${slug}/capstone`),
+    });
+  }
+  if (zenAvailable) {
+    actionItems.push({
+      id: "act:zen",
+      label: zenActive ? "Exit zen mode" : "Enter zen mode",
+      keywords: "zen focus distraction free write fullscreen",
+      run: () => {
+        close();
+        zenSetActive(!zenActive);
+      },
+    });
+    actionItems.push({
+      id: "act:brief",
+      label: "Toggle prompt panel",
+      keywords: "brief reference prompt panel rail question",
+      run: () => {
+        close();
+        zenToggleBrief();
+      },
     });
   }
   for (const t of THEMES)

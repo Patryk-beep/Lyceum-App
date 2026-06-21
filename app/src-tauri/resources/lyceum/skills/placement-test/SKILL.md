@@ -1,11 +1,13 @@
 ---
 name: placement-test
-description: Assess a learner's current level in a subject with a short adaptive test, then recommend where to start. Use when the user says 'test my skills/level', 'where should I start', 'how much do I already know', when placement is requested, or whenever the course's start is set to 'test'. Produces a recommended starting level 1-6.
+description: Assess a learner's current level with a short, INTERACTIVE adaptive test — you ask one question, the learner answers, you grade it and ask the next, then recommend where to start. Use when the user says 'test my skills/level', 'where should I start', 'how much do I already know', when placement is requested, or whenever the course's start is set to 'test'. Produces a recommended starting level 1-6.
 ---
 
 # placement-test
 
-Decide where the learner should start, in ~10 adaptive questions. Runs after `research-topic` (it needs the knowledge map) and before `build-curriculum`; the router reaches it when `scale.start == "test"` and `placement.taken != true`.
+Decide where the learner should start, through a short **interactive** placement: you ask one adaptive question, the learner answers it in the app, you grade that answer and ask the next — deciding the level yourself. Runs after `research-topic` (it needs the knowledge map) and before `build-curriculum`; the router reaches it when `scale.start == "test"` and `placement.taken != true`.
+
+**One turn = one exchange.** Each time this skill runs you do exactly ONE of: open with the first question, grade the latest answer and ask the next, or finalize. You coordinate across turns through two files — you never hold a live back-and-forth in a single turn.
 
 ## Read first
 
@@ -16,62 +18,50 @@ Read these reference files before doing anything (paths resolve once the plugin 
 - `${CLAUDE_PLUGIN_ROOT}/references/LEVELS.md` — the 6-level scale you are classifying into.
 - `${CLAUDE_PLUGIN_ROOT}/references/PLACEMENT.md` — the adaptive logic and floor/ceiling → level table. **This is the authoritative blueprint; follow it exactly.**
 
-Then read the active subject manifest at `learning/<slug>/manifest.json`. **If no manifest exists, STOP** and tell the user to run `lyceum:learn` first — this skill does not create the workspace. Also confirm `knowledge-map.json` exists in the same folder; if it is missing, STOP and tell the user to run `lyceum:research-topic` first (the item pool is built from it).
+Then read the active subject manifest at `learning/<slug>/manifest.json`. **If no manifest exists, STOP** and tell the user to run `lyceum:learn` first — this skill does not create the workspace. Also confirm `knowledge-map.json` exists in the same folder; if it is missing, STOP and tell the user to run `lyceum:research-topic` first (you draw questions from it).
 
-## Process
+## The two coordination files (in `learning/<slug>/`)
 
-1. **Build the item pool from `knowledge-map.json`.** Span tiers 1–6 with a few items per tier. Make most items quick **recall / short-answer**; add one or two short **reasoning** probes at the higher tiers (3+). Tag each item with its `tier` (1–6) and a `scoring key`. Keep every item retrieval-based — the learner produces an answer before anything is revealed. (An item at tier *d* is one a learner at level *d* passes ~50–60% of the time.)
+- **`placement-state.json`** — **YOURS.** You own it and rewrite it every turn. Shape:
+  ```json
+  { "asked": 2, "maxQuestions": 8,
+    "current": { "id": "q3", "tier": 4, "question": "…" },
+    "lastFeedback": "Close — you named retrieval but missed spacing.",
+    "history": [
+      { "id": "q1", "question": "…", "answer": "…", "verdict": "correct", "feedback": "…" }
+    ],
+    "done": false, "recommendedLevel": null, "rationale": null }
+  ```
+  When the run is complete: `"current": null, "done": true, "recommendedLevel": <int 1–6>, "rationale": "<one-line floor/ceiling summary>"`.
+- **`placement-answer.json`** — the **APP's** (read-only to you). Shape `{ "id": "q3", "answer": "…" }`. Grade it **only when its `id` equals your `current.id`** — otherwise it is a stale leftover; ignore it.
 
-2. **Run adaptively per PLACEMENT.md.** Start at tier 3–4 (working estimate `L = 3.5`, `step = 1.0`):
-   - Ask one item at `tier = round(L)`. Ask for the learner's answer **before revealing anything**. Optionally ask a confidence rating (1–5) to seed calibration.
-   - Judge pass/fail against the scoring key, then reveal.
-   - On a **correct** answer go harder (`L = L + step`); on a **wrong** answer go easier (`L = L - step`).
-   - Shrink the step each item: `step = max(0.25, step * 0.5)` (1.0 → 0.5 → 0.25).
-   - Ask the next item at `tier = clamp(round(L), 1, 6)`.
+## Choose your mode (decide it from the files)
 
-3. **Stop** as soon as a **floor** and **ceiling** bracket the level — i.e. `passed ≥2 at tier T` and `failed ≥2 at tier T+1` (then `floor = T`, `ceiling = T+1`) — or at **10 items**, whichever comes first. (Non-adaptive fallback in PLACEMENT.md if you must use a fixed 10-item form.)
+1. **No `placement-state.json` yet** → **OPEN.** Draw a first question from `knowledge-map.json` at a mid tier (≈3). Keep it short, retrieval-based, with a single expected answer. Write `placement-state.json` with `asked: 1`, `maxQuestions: 8`, `current: { "id": "q1", "tier": 3, "question": … }`, `lastFeedback: null`, `history: []`, `done: false`, `recommendedLevel: null`, `rationale: null`. Then STOP.
 
-4. **Classify by floor/ceiling, not a fine score**, using the PLACEMENT.md table (fails most tier-1 → L1; sustains tier 1 breaks at 2 → L2; … passes hardest tier 5–6 → L6). **Recommend starting one notch below the ceiling** to avoid early frustration. Clamp the recommendation to 1–6.
+2. **`done: false` AND `placement-answer.json` exists with `id == current.id`** → **GRADE + ASK.**
+   - Judge the typed answer against what a learner at `current.tier` should produce: `verdict ∈ correct | partial | incorrect`. Write a 1–2 sentence `lastFeedback` (what was right or missing — **never** the answer to the next question).
+   - Append the just-graded item `{ id, question, answer, verdict, feedback }` to `history`.
+   - Then do EITHER:
+     - **Ask the next adaptive question** — harder after `correct` (tier up), easier after `incorrect` (tier down), same tier or a breadth probe after `partial`, following PLACEMENT.md's `L`/`step` rule. Use a new `id` (`q<asked+1>`), set its `tier` and `question` in `current`, and `asked += 1`. One short question only.
+     - **OR finalize** — when you can already bracket the level (sustained ≥2 passes at tier `T` and ≥2 fails at `T+1`) **or** `asked >= maxQuestions`: set `done: true`, `current: null`, `recommendedLevel` (one notch below the ceiling, clamped 1–6, per PLACEMENT.md), and `rationale` (a one-line floor/ceiling summary). Also write `learning/<slug>/placement.md` — the full item-by-item transcript (from `history`) plus the floor/ceiling reasoning — and rewrite `learning/<slug>/progress.md` per MANIFEST.md.
+   - Rewrite `placement-state.json`. Then STOP.
 
-5. **Write outputs** (see State writes): `placement.md` (full transcript + reasoning), the `placement` block, overwrite `scale.start`, set `current.level`, bump `updated`, and rewrite `progress.md`.
+3. **`done: false` but no matching fresh answer** (no `placement-answer.json`, or its `id ≠ current.id`) → **WAIT.** Leave `placement-state.json` unchanged and STOP — the learner has not answered the current question yet.
 
-6. **Report** the recommended starting level and the one-line evidence to the user, and point them at the next step (`lyceum:build-curriculum`). Frame the result as a starting prior, not a final verdict.
+4. **`done: true`** → **DONE.** Leave `placement-state.json` as is and STOP. The Lyceum app reads `recommendedLevel` and commits the `placement{}` block, overwrites `scale.start`, and sets `current.level` itself — you never write those.
 
-## State writes
+## Adaptive logic (per PLACEMENT.md)
 
-Write back to `learning/<slug>/manifest.json`:
-
-- `placement` block: `{ "taken": true, "date": "<today>", "recommendedLevel": <int 1–6>, "evidence": "<floor/ceiling summary, e.g. 'floor at L2 (sustained), ceiling at L3 (broke on subjunctive)'>" }`.
-- **Overwrite `scale.start`** with the recommended integer (the router keys off `placement.taken`, not the `"test"` sentinel, so downstream skills always read a number).
-- Set `current.level` to the same recommended integer.
-- Append a `history` entry: `{ date, skill: "placement-test", event, result }`.
-- If the learner gave confidence ratings, update `calibration` (predictions/hits/log) from predicted-vs-actual.
-- Bump `updated` to today's date.
-
-Also write `learning/<slug>/placement.md` (full item-by-item transcript, each answer judged pass/fail, and the floor/ceiling reasoning) and rewrite `learning/<slug>/progress.md` in the format defined in MANIFEST.md.
-
-Do **not** write `objective.mastery` or any `module.status` — those are read-only here (single-writer rule).
+You are **stateless** between turns, so reconstruct the working estimate each turn from `history` (the tier and verdict of each item): start mid-range (`L ≈ 3.5`, `step = 1.0`); `correct → L += step` (harder), `incorrect → L -= step` (easier); shrink `step = max(0.25, step * 0.5)`; ask the next at `tier = clamp(round(L), 1, 6)`. Stop when a **floor** (sustained passes at `T`) and a **ceiling** (consistent fails at `T+1`) bracket the level, or at `maxQuestions` (≤ 8). **Classify by floor/ceiling, not a fine score**, and recommend **one notch below the ceiling** to avoid early frustration.
 
 ## Guardrails
 
-- **Never reveal an answer, scoring key, or answer-key before the learner has attempted that item.** The learner always generates an answer first.
-- **Classify, don't measure.** Decide by floor and ceiling per PLACEMENT.md, not by a fine-grained percentage; recommend one notch below the ceiling.
-- **Mastery is read-only.** Only `assess-understanding` and `review-session` write `objective.mastery` and module/level status. This skill never touches them.
+- **You write ONLY `placement-state.json`** (plus `placement.md` and `progress.md` once `done`). You do **not** write the manifest `placement` block, `scale.start`, `current.*`, `objective.mastery`, `module.status`, or `certification` — the app commits the chosen level on finalize, and mastery belongs solely to `assess-understanding` / `review-session` (single-writer rule).
+- **One question per turn.** Short, retrieval-based, a single expected answer. Never reveal a scoring key or answer before the learner has attempted that item, and never hint the *next* question's answer in `lastFeedback`.
+- **Grade the real answer.** Judge what the learner actually typed in `placement-answer.json`; do not assume or invent a response.
+- **Ignore stale answers.** Grade only when `placement-answer.json.id == current.id`.
+- **Cap at `maxQuestions` (≤ 8).** Bracket and finalize early once the floor/ceiling is clear.
+- **State, not conversation.** Everything you need is in `manifest.json`, `knowledge-map.json`, `placement-state.json`, and `placement-answer.json`; never assume an earlier turn's chat is still in context.
 - **Treat the result as a prior, not a verdict** — `assess-understanding` adjusts it within the first lessons. Do not over-state precision to the learner.
-- **State, not conversation.** Read `manifest.json` first; if it is missing, stop and send the user to `lyceum:learn`. Write the manifest last and bump `updated`. Never assume another skill ran this session.
-- Allocate any new ids as (max existing numeric suffix) + 1; never reuse an id.
-- Cap the test at 10 items; prefer free/short recall over recognition-only multiple choice (it leaks the answer).
-
-## Machine output (for the Lyceum app)
-
-When run inside the **Lyceum desktop app**, FIRST write the full item pool to a machine-readable file so the app can drive the adaptive floor/ceiling loop locally (PLACEMENT.md), then make one final write of the `placement{}` block + `placement.md` from the collected transcript:
-
-- Path: `placement-items.json`
-- Shape:
-  ```json
-  { "items": [
-    { "id": "p1", "tier": 2, "stem": "…", "type": "short",
-      "scoringKey": "expected answer / accept-list / rubric" }
-  ] }
-  ```
-- A few items per tier (1–6), each tagged with its `tier` and a `scoringKey`. This is **machine output only**; the human transcript still lives in `placement.md`, and this skill never writes mastery.
+- Allocate question ids as `q<asked+1>`; never reuse an id within a run.

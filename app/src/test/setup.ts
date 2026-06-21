@@ -13,6 +13,14 @@ if (typeof globalThis.ResizeObserver === "undefined") {
   };
 }
 
+// jsdom doesn't implement URL.createObjectURL/revokeObjectURL; the SVG-file image
+// channel (LessonImg) builds a blob: URL from fetched SVG text. Stub both so the
+// channel renders in tests (the real webview implements them).
+if (typeof URL.createObjectURL !== "function") {
+  URL.createObjectURL = () => "blob:mock-svg";
+  URL.revokeObjectURL = () => {};
+}
+
 // jsdom (25) ships Blob/File without `.text()`, which the app uses to read a
 // picked hand-in file. The real Tauri webview has it; polyfill it for tests via
 // the FileReader jsdom does implement.

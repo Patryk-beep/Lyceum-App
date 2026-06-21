@@ -14,6 +14,7 @@ Before doing anything, read these reference files (resolve them via the plugin r
 1. `${CLAUDE_PLUGIN_ROOT}/references/MANIFEST.md` — the state contract: `manifest.json` schema, the read-first/write-last rule, the single-writer-for-mastery rule, ID allocation, and the `progress.md` format.
 2. `${CLAUDE_PLUGIN_ROOT}/references/REFERENCE.md` — the ten pedagogical principles every skill obeys (so the research you gather feeds backward design and dual coding downstream).
 3. `${CLAUDE_PLUGIN_ROOT}/references/LEVELS.md` — the 6-level mastery scale. You will use this to write the six `levelDescriptors` accurately for THIS subject.
+4. `${CLAUDE_PLUGIN_ROOT}/references/GRAPHICS.md` — the graphics output contract. Any visual in `research.md` follows it (table/KaTeX `$$…$$`/ASCII/mermaid/`assets/` SVG; no raster or remote-URL images — the app can't serve them).
 
 Then read the active subject manifest at `learning/<slug>/manifest.json`. If no manifest exists, **STOP** and tell the user to run `lyceum:learn` first — `learn` creates the workspace and captures the subject and target. Do not invent a manifest here.
 
@@ -58,6 +59,7 @@ Do **not** write any `objective.mastery`, `module.status`, or `current.status` l
 - **Workflow is preferred, never required.** Use the dynamic Workflow when it is available — the parallel per-facet fan-out plus adversarial verification is the higher-quality path. But never assume it exists: the headless run may not expose it. Detect-or-attempt, catch any unavailability or failure, and fall through to the deterministic sequential procedure **automatically and silently**. A Workflow attempt must never block, hang, or abort the run.
 - **Never stop and never ask.** This skill runs headless; `AskUserQuestion` is unavailable. On any tool shortfall, degrade to the fallback path rather than halting or prompting. The run must always end with valid artifacts.
 - **Cite everything.** Every load-bearing claim in `research.md` carries a URL. No uncited assertions — on either the Workflow or the fallback path.
+- **Graphics follow GRAPHICS.md.** Any visual in `research.md` uses a supported channel — never raster or remote-URL images (the app degrades them to a caption); math is `$$…$$` only. (`research.html` styling stays governed by THEMES.md.)
 - **Multi-source, not single-source.** Every facet is built from **at least three independent sources**, with load-bearing claims adversarially cross-checked across them; favor primary, authoritative, and canonical sources, and record (don't silently drop) conflicts. This bar is identical on both paths.
 - **`knowledge-map.json` must have EXACTLY the five keys** (`concepts`, `misconceptions`, `levelDescriptors`, `authenticTasks`, `resources`) with the field shapes specified, and must be valid JSON. `levelDescriptors` must cover all six keys `"1"`–`"6"`. The contract is identical whether the map was produced by the Workflow synthesis phase or the fallback.
 - **Never write mastery.** No `objective.mastery`, no `module.status`, no `current.status` advancement. Mastery is read-only in this skill.

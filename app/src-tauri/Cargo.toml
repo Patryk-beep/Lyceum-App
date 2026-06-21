@@ -1,6 +1,6 @@
 [package]
 name = "lyceum-app"
-version = "0.1.4"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "Lyceum-App — desktop GUI over the Lyceum learning system."
@@ -20,7 +20,7 @@ serde_json = "1"
 time = { version = "0.3", features = ["formatting"] }
 lyceum-core = { path = "../crates/lyceum-core" }
 lyceum-engine = { path = "../crates/lyceum-engine" }
-tokio = { version = "1", features = ["sync"] }
+tokio = { version = "1", features = ["sync", "rt", "time", "macros"] }
 
 [dev-dependencies]
 tempfile = "3"

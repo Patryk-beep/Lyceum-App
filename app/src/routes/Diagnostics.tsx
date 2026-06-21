@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { engineApi } from "../lib/engine";
 import type { DoctorReport, PreflightReport } from "../lib/types";
-import { useEngineStore } from "../stores/useEngineStore";
+import { DIAGNOSTICS_SLUG, useEngineStore } from "../stores/useEngineStore";
 
 function Check({ ok, label }: { ok: boolean; label: string }) {
   return (
@@ -40,7 +40,7 @@ export function Diagnostics() {
 
   async function runSmoke() {
     setErr(null);
-    start();
+    start(DIAGNOSTICS_SLUG);
     setBusy(true);
     try {
       await engineApi.smoke(

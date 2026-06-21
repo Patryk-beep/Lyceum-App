@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { ArtifactView } from "../components/ArtifactView";
 import { MasterySeal } from "../components/MasterySeal";
-import { SubmissionEditor } from "../components/SubmissionEditor";
+import { ZenEditor } from "../components/ZenEditor";
 import { api } from "../lib/ipc";
 import { useManifest } from "../lib/query";
 import type { InputType } from "../lib/types";
@@ -20,6 +20,7 @@ export function Capstone() {
   const { slug = "" } = useParams();
   const qc = useQueryClient();
   const engineStart = useEngineStore((s) => s.start);
+  const engineReset = useEngineStore((s) => s.reset);
   const { data: manifest, isLoading } = useManifest(slug);
 
   // The capstone skill writes capstone.json (the deliverable spec) on its first
@@ -40,12 +41,16 @@ export function Capstone() {
 
   const run = useMutation({
     mutationFn: () => api.runSubjectStep(slug),
-    onMutate: () => engineStart(),
+    onMutate: () => engineStart(slug),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["manifest", slug] });
       qc.invalidateQueries({ queryKey: ["subjects"] });
       qc.invalidateQueries({ queryKey: ["artifact", slug] });
     },
+    // A turn that fails before any event streams (e.g. spawn failure) would otherwise
+    // leave the engine store stuck "running", and the non-dismissible overlay would
+    // bar the subject for the session. Clear the run so the page recovers.
+    onError: () => engineReset(slug),
   });
 
   const submit = useMutation({
@@ -123,11 +128,19 @@ export function Capstone() {
         <section className="submission-section" data-testid="capstone-submit">
           <h2 className="submission-section__title">Hand in your deliverable</h2>
           {parsed.prompt && <p className="muted">{parsed.prompt}</p>}
-          <SubmissionEditor
+          <ZenEditor
             inputType={parsed.inputType}
             options={parsed.options}
             language={parsed.language}
             busy={busy}
+            brief={
+              <>
+                <ArtifactView slug={slug} relpath="capstone.md" title="Capstone brief" />
+                {parsed.prompt && <p className="muted">{parsed.prompt}</p>}
+              </>
+            }
+            briefTitle="Capstone brief"
+            storageKey={`draft:${slug}:capstone`}
             onSubmit={(content) => submit.mutate(content)}
           />
         </section>

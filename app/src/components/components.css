@@ -268,6 +268,10 @@
 .content {
   overflow: auto;
   padding: 28px 34px;
+  position: relative;
+}
+.content__inner {
+  min-height: 100%;
 }
 
 /* ---- Dashboard layout ---- */
@@ -733,6 +737,58 @@
   padding: 6px 10px;
 }
 
+/* ---- Lesson graphics (RichMarkdown: svg/blob images, mermaid, code blocks) ---- */
+.reader img {
+  max-width: 100%;
+  height: auto;
+}
+/* Block code (and the mermaid raw-source fallback) must NOT inherit the inline-chip
+   styling on `.reader code` above — reset it to a plain monospace block. */
+.reader pre {
+  background: var(--panel-2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+.reader pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+.reader__mermaid {
+  margin: 1em 0;
+  text-align: center;
+}
+.reader__mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+/* Reserve space so a page of diagrams doesn't "popcorn" as each one resolves. */
+.reader__mermaid--loading {
+  min-height: 120px;
+}
+/* Graceful image degradation: an alt caption, never a broken-image placeholder. */
+.reader__img-alt {
+  display: inline-block;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.92em;
+}
+.reader__img-loading {
+  display: inline-block;
+  min-width: 80px;
+  min-height: 1em;
+}
+/* Placement/quiz stems route through RichMarkdown (for math); kill the wrapper <p>'s
+   default margins so a one-line stem keeps the card's own spacing. */
+.review-card__prompt > p:first-child {
+  margin-top: 0;
+}
+.review-card__prompt > p:last-child {
+  margin-bottom: 0;
+}
+
 /* ---- Placement / Capstone ---- */
 .placement,
 .capstone {
@@ -1104,6 +1160,181 @@
   align-self: flex-start;
 }
 
+/* ---- Placement: collapsible "last answer" feedback (verdict chip + on-demand detail) ---- */
+.pfeedback {
+  margin-bottom: 12px;
+}
+.pfeedback__summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+.pfeedback__summary:hover {
+  border-color: var(--line-strong);
+}
+.pfeedback__chip {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pfeedback__chip.is-correct {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+}
+.pfeedback__chip.is-partial {
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 16%, transparent);
+}
+.pfeedback__chip.is-incorrect {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+}
+.pfeedback__caret {
+  margin-left: auto;
+  flex: none;
+}
+.pfeedback__body {
+  padding: 12px 14px 4px;
+  font-size: 14px;
+}
+
+/* ---- Placement: in-context "checking" affordance (replaces the heavy overlay for a Q&A) ---- */
+.placement-checking__answer {
+  margin: 10px 0 0;
+  white-space: pre-wrap;
+}
+.placement-checking__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+}
+.placement-checking__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: lycPulse 1.4s infinite;
+}
+
+/* ---- Zen write mode (whole-window focus cover) ---- */
+.zen-host__bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.zen-host__enter {
+  padding: 4px 12px;
+  font-size: 13px;
+}
+/* Full-cover layer, portaled to document.body above all chrome (palette is z 60/61). */
+.zen {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
+}
+.zen__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+.zen__save {
+  font-size: 12px;
+}
+.zen__hint {
+  margin-left: auto;
+  font-size: 12px;
+}
+.zen__close {
+  padding: 2px 10px;
+  font-size: 18px;
+  line-height: 1;
+}
+.zen__main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  position: relative;
+}
+.zen__canvas {
+  flex: 1;
+  overflow: auto;
+  padding: 4vh 24px 24px;
+}
+/* Centered, readable measure (45–75ch) on the editor field. */
+.zen__canvas .submission {
+  max-width: 68ch;
+  margin-inline: auto;
+}
+.zen__rail {
+  display: flex;
+  flex: none;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+}
+.zen__rail.is-closed {
+  border-left: none;
+  background: transparent;
+}
+.zen__rail-toggle {
+  align-self: flex-start;
+  margin-top: 16px;
+  width: 24px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+}
+.zen__rail-body {
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.zen__rail-header {
+  padding: 12px 16px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.zen__rail-content {
+  overflow: auto;
+  padding: 14px 16px;
+}
+/* Below ~1100px the rail overlays the canvas instead of squeezing it. */
+@media (max-width: 1100px) {
+  .zen__rail {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
 /* ===================================================================
    Navigation redesign: top bar · sidebar zones · loop spine ·
    breadcrumb · subject switcher · command palette · a11y
@@ -1402,15 +1633,16 @@
 }
 
 /* ---- Command palette (cmdk) ---- */
+/* Above the zen cover (z 70) so ⌘K inside zen isn't hidden behind it. */
 .palette-overlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 90;
   background: color-mix(in srgb, var(--canvas) 72%, transparent);
 }
 .palette {
   position: fixed;
-  z-index: 61;
+  z-index: 91;
   top: 13vh;
   left: 50%;
   transform: translateX(-50%);
@@ -1504,5 +1736,135 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---- Creation progress (new-subject wizard) ---- */
+.creation-progress {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.creation-progress__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.creation-progress__row[data-status="done"] {
+  color: var(--text);
+}
+.creation-progress__row[data-status="current"] {
+  color: var(--text);
+  font-weight: 600;
+}
+.creation-progress__glyph {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--panel-2);
+  font-size: 11px;
+  line-height: 1;
+  flex: none;
+}
+.creation-progress__glyph--done {
+  color: var(--gold);
+}
+.creation-progress__glyph--current {
+  background: var(--gold);
+  color: var(--canvas);
+}
+.creation-progress__glyph--todo {
+  color: var(--faint);
+}
+
+/* ---- Skill-run overlay + progress (per-subject gating) ---- */
+.skill-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 10vh 24px 24px;
+  background: color-mix(in srgb, var(--canvas) 72%, transparent);
+  backdrop-filter: blur(2px);
+  overflow: auto;
+}
+.skill-overlay__panel {
+  width: min(560px, 100%);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.skill-overlay__note {
+  margin: 0;
+  font-size: 13px;
+}
+.skill-run {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.skill-run__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.skill-run__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex: none;
+}
+.skill-run__dot--running {
+  animation: skill-pulse 1.2s ease-in-out infinite;
+}
+.skill-run__dot--done {
+  background: var(--success);
+}
+.skill-run__dot--error {
+  background: var(--danger);
+}
+.skill-run__label {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--text);
+}
+.skill-run__status,
+.skill-run__elapsed {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sidebar__run-pip {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  vertical-align: middle;
+  animation: skill-pulse 1.2s ease-in-out infinite;
+}
+@keyframes skill-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
   }
 }

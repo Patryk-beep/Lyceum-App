@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useManifest, useStreak, useSubjects } from "../lib/query";
 import type { SubjectSummary } from "../lib/types";
+import { useAnyRunning } from "../stores/useEngineStore";
 import { loopStages, parseSubjectRoute, type LoopStage } from "../theme/loop";
 import { resumeRoute } from "../hooks/useResumeState";
 import { Sigil } from "./Sigil";
@@ -36,11 +37,13 @@ function globalActive(pathname: string, to: string): boolean {
 function SubjectSwitcher({
   subjectName,
   subjects,
+  runningSlugs,
   onPick,
   hidden = false,
 }: {
   subjectName: string;
   subjects: SubjectSummary[];
+  runningSlugs: string[];
   onPick: (slug: string) => void;
   hidden?: boolean;
 }) {
@@ -98,6 +101,13 @@ function SubjectSwitcher({
                   }}
                 >
                   {s.subject}
+                  {runningSlugs.includes(s.slug) && (
+                    <span
+                      className="sidebar__run-pip"
+                      aria-label="running"
+                      title="A skill turn is running"
+                    />
+                  )}
                 </button>
               </li>
             ))}
@@ -116,6 +126,7 @@ export function AppSidebarView({
   subjects,
   subjectName,
   streakDays,
+  runningSlugs = [],
   onNavigate,
   hidden = false,
 }: {
@@ -126,6 +137,7 @@ export function AppSidebarView({
   subjects: SubjectSummary[];
   subjectName: string | null;
   streakDays: number;
+  runningSlugs?: string[];
   onNavigate: (to: string) => void;
   hidden?: boolean;
 }) {
@@ -157,6 +169,7 @@ export function AppSidebarView({
           <SubjectSwitcher
             subjectName={subjectName ?? slug}
             subjects={subjects}
+            runningSlugs={runningSlugs}
             onPick={onNavigate}
             hidden={hidden}
           />
@@ -170,6 +183,13 @@ export function AppSidebarView({
             data-testid="loop-overview"
           >
             Overview
+            {runningSlugs.includes(slug) && (
+              <span
+                className="sidebar__run-pip"
+                aria-label="running"
+                title="A skill turn is running"
+              />
+            )}
           </Link>
           {stages.length > 0 && (
             <SubjectLoopNav slug={slug} stages={stages} activeKey={activeKey} />
@@ -223,6 +243,7 @@ export function AppSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const { data: subjects } = useSubjects();
   const { data: manifest } = useManifest(slug ?? "");
   const { data: streak } = useStreak();
+  const runningSlugs = useAnyRunning();
 
   const summary = subjects?.find((s) => s.slug === slug);
   const stages =
@@ -239,6 +260,7 @@ export function AppSidebar({ collapsed = false }: { collapsed?: boolean }) {
       subjects={subjects ?? []}
       subjectName={manifest?.subject ?? summary?.subject ?? null}
       streakDays={streak?.current ?? 0}
+      runningSlugs={runningSlugs}
       onNavigate={(s) => navigate(resumeRoute(s))}
       hidden={collapsed}
     />

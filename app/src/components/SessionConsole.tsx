@@ -1,4 +1,4 @@
-import { useEngineStore } from "../stores/useEngineStore";
+import { useRun } from "../stores/useEngineStore";
 
 const STATUS_LABEL: Record<string, string> = {
   idle: "Idle",
@@ -7,10 +7,9 @@ const STATUS_LABEL: Record<string, string> = {
   error: "Error",
 };
 
-/** The LIVE SESSION surface: thinking, tool steps, and streamed assistant text. */
-export function SessionConsole() {
-  const { status, text, thinking, tools, warnings, init, result } =
-    useEngineStore();
+/** The LIVE SESSION surface for one subject: thinking, tool steps, streamed text. */
+export function SessionConsole({ slug }: { slug: string | null | undefined }) {
+  const { status, text, thinking, tools, warnings, init, result } = useRun(slug);
 
   return (
     <div className="session-console" data-testid="session-console">

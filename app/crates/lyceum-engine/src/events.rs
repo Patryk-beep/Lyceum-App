@@ -61,6 +61,12 @@ pub enum BridgeEvent {
         /// render this as a dollar charge when `api_key_source == "none"`.
         cost_usd_list_price: f64,
     },
+    /// A deterministic subject-creation milestone — the named phase's artifact
+    /// just landed on disk. Emitted by the app's file watcher (not the protocol
+    /// projector) so the wizard can show research → [placement] → curriculum.
+    Milestone {
+        phase: String,
+    },
     Warning {
         message: String,
     },

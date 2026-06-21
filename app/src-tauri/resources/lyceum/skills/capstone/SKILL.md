@@ -15,6 +15,7 @@ Before doing anything, read these reference files (they carry the contracts and 
 - `${CLAUDE_PLUGIN_ROOT}/references/REFERENCE.md` — the ten pedagogical principles (especially feedback, retrieval, calibration, mastery gating).
 - `${CLAUDE_PLUGIN_ROOT}/references/LEVELS.md` — the 6-level scale, so the capstone is scaled to `scale.target`.
 - `${CLAUDE_PLUGIN_ROOT}/references/ASSIGNMENTS.md` — the authentic task types (project, problem-based scenario, teach-it, capstone/portfolio) and the rubric conventions.
+- `${CLAUDE_PLUGIN_ROOT}/references/GRAPHICS.md` — the graphics output contract, for any visual in the brief/rubric (table/KaTeX/ASCII/mermaid/SVG; no raster or remote URLs; math is `$$…$$` only).
 
 Then read the active subject manifest at `learning/<slug>/manifest.json`. If no manifest exists (or it is unreadable), **STOP** and tell the user to run `lyceum:learn` first — never invent state. If the manifest exists but `knowledge-map.json` is missing, STOP and tell the user to run `lyceum:research-topic` first — the capstone's driving question and deliverable are drawn from its `authenticTasks` and `levelDescriptors`. Resolve `<slug>` from the active subject; if more than one subject exists, confirm which one with the user.
 
@@ -67,6 +68,7 @@ Write these back to `learning/<slug>/manifest.json`, then bump `updated` to toda
 ## Guardrails
 
 - **State, not conversation.** Read `manifest.json` first; never assume another skill ran this session. If it is missing, stop and send the user to `lyceum:learn`.
+- **Graphics follow GRAPHICS.md.** Any visual in the brief or rubric uses a supported channel (table/KaTeX `$$…$$`/ASCII/mermaid/`assets/` SVG) — never raster or remote-URL images, which the app can't serve.
 - **Mastery is read-only for this skill.** Never touch `objective.mastery` or a module's `mastered` status. Writing `current.status = "certified"` on a pass is the one `current`-block transition this skill owns.
 - **The learner generates first.** Never reveal a defense answer, model solution, or the artifact itself before the learner has attempted it. Coach with hints (pump → hint → prompt); do not do the work for them.
 - **Hold the certification line.** Certify only when **no criterion is below Proficient and ≥75% are Advanced**. A miss is never a terminal grade — it routes to a critique-and-revise cycle with feed-forward.

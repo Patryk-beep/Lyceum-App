@@ -144,8 +144,8 @@ export function Dashboard() {
           onConfirm={() =>
             del.mutate(confirming.slug, {
               onSuccess: () => {
-                // The deleted subject's warm session is gone — clear stale engine UI.
-                useEngineStore.getState().reset();
+                // The deleted subject's warm session is gone — clear its engine run.
+                useEngineStore.getState().reset(confirming.slug);
                 setConfirming(null);
               },
             })

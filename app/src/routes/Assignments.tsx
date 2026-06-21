@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { ArtifactView } from "../components/ArtifactView";
 import { ConfirmDestructive } from "../components/ConfirmDestructive";
-import { SubmissionEditor } from "../components/SubmissionEditor";
+import { ZenEditor } from "../components/ZenEditor";
 import { api } from "../lib/ipc";
 import { useDeleteAssignment, useManifest, useSubmitAssignment } from "../lib/query";
 import type { Assignment } from "../lib/types";
@@ -111,7 +111,7 @@ export function AssignmentDetail() {
   // next step routes to assess-understanding (mirrors the Roadmap/Capstone pattern).
   const assess = useMutation({
     mutationFn: () => api.runSubjectStep(slug),
-    onMutate: () => engineStart(),
+    onMutate: () => engineStart(slug),
     onSuccess: () => {
       for (const key of ["manifest", "subjects", "analytics", "review", "artifact"]) {
         qc.invalidateQueries({ queryKey: key === "subjects" ? [key] : [key, slug] });
@@ -158,11 +158,14 @@ export function AssignmentDetail() {
       {a.status === "open" && onCurrentModule && (
         <section className="submission-section" data-testid="submission-section">
           <h2 className="submission-section__title">Your hand-in</h2>
-          <SubmissionEditor
+          <ZenEditor
             inputType={a.inputType}
             options={a.options}
             language={a.language}
             busy={busy}
+            brief={<ArtifactView slug={slug} relpath={a.file} title="Assignment brief" />}
+            briefTitle="Assignment brief"
+            storageKey={`draft:${slug}:${a.id}`}
             onSubmit={(content) =>
               submit.mutate(
                 { assignmentId: a.id, content },

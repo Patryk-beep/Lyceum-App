@@ -46,6 +46,23 @@ describe("SubmissionEditor", () => {
     expect(onSubmit).toHaveBeenCalledWith("answer from file");
   });
 
+  it("uses controlled value/onChange when supplied", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <SubmissionEditor
+        inputType="text"
+        value="seeded"
+        onChange={onChange}
+        onSubmit={vi.fn()}
+      />,
+    );
+    const ta = screen.getByTestId("submission-textarea") as HTMLTextAreaElement;
+    expect(ta.value).toBe("seeded");
+    await user.type(ta, "!");
+    expect(onChange).toHaveBeenCalled();
+  });
+
   it("toggles a markdown preview", async () => {
     const user = userEvent.setup();
     render(<SubmissionEditor inputType="markdown" onSubmit={vi.fn()} />);
