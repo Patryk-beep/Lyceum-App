@@ -5,6 +5,7 @@ import type {
   DeleteLessonResult,
   LessonEntry,
   Manifest,
+  NotebookEntry,
   ReviewCandidate,
   ReviewGrade,
   RouteDto,
@@ -65,4 +66,20 @@ export const api = {
     invoke<TutorThread>("read_tutor_thread", { slug }),
   clearTutorThread: (slug: string) =>
     invoke<void>("clear_tutor_thread", { slug }),
+  // Notebook: app-owned Markdown notes (never touch the manifest). `moduleId`
+  // anchors a note to the current lesson's module; omit it for a free note.
+  listNotebooks: (slug: string) =>
+    invoke<NotebookEntry[]>("list_notebooks", { slug }),
+  readNotebook: (slug: string, id: string) =>
+    invoke<NotebookEntry>("read_notebook", { slug, id }),
+  createNotebook: (
+    slug: string,
+    title: string,
+    content: string,
+    moduleId?: string,
+  ) => invoke<NotebookEntry>("create_notebook", { slug, title, content, moduleId }),
+  updateNotebook: (slug: string, id: string, title: string, content: string) =>
+    invoke<NotebookEntry>("update_notebook", { slug, id, title, content }),
+  deleteNotebook: (slug: string, id: string) =>
+    invoke<void>("delete_notebook", { slug, id }),
 };

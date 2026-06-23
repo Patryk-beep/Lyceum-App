@@ -198,6 +198,20 @@ export interface TutorEnvelope {
   event: BridgeEvent;
 }
 
+// --- Notebook (app-owned Markdown notes; never touches the manifest) ---
+
+/** A single note — mirror of the Rust `NotebookEntry` (camelCase wire keys, dates
+ *  as ISO `YYYY-MM-DD` strings). `moduleId` anchors the note to a lesson's module. */
+export interface NotebookEntry {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  moduleId?: string;
+  tags: string[];
+}
+
 // --- Partial manifest shape (enough for views; full type arrives with ts-rs). ---
 
 export interface Objective {

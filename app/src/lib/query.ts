@@ -137,6 +137,45 @@ export function useSubmitAssignment(slug: string) {
   });
 }
 
+/** Every note for a subject (newest-updated first). The whole list is loaded so
+ *  the UI can do client-side search over note content without extra round-trips. */
+export function useNotebooks(slug: string) {
+  return useQuery({
+    queryKey: ["notebook", slug],
+    queryFn: () => api.listNotebooks(slug),
+    enabled: !!slug,
+  });
+}
+
+/** Create (no `id`) or update (with `id`) a note, then refresh the notebook list. */
+export function useSaveNotebook(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: {
+      id?: string;
+      title: string;
+      content: string;
+      moduleId?: string;
+    }) =>
+      v.id
+        ? api.updateNotebook(slug, v.id, v.title, v.content)
+        : api.createNotebook(slug, v.title, v.content, v.moduleId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notebook", slug] });
+    },
+  });
+}
+
+export function useDeleteNotebook(slug: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteNotebook(slug, id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["notebook", slug] });
+    },
+  });
+}
+
 export function useResetCurriculum(slug: string) {
   const qc = useQueryClient();
   return useMutation({

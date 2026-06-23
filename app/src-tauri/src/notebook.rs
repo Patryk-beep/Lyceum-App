@@ -406,6 +406,56 @@ mod tests {
         assert!(list_notebooks(tmp.path(), SLUG).unwrap().is_empty());
     }
 
+    // --- wire contract (parity with the hand-authored TS `NotebookEntry`) ------
+
+    #[test]
+    fn entry_serializes_with_camelcase_wire_keys() {
+        let e = NotebookEntry {
+            id: "nb001".into(),
+            title: "T".into(),
+            content: "c".into(),
+            created_at: D1,
+            updated_at: D2,
+            module_id: Some("m02".into()),
+            tags: vec!["grammar".into()],
+        };
+        let v = serde_json::to_value(&e).unwrap();
+        for key in [
+            "id",
+            "title",
+            "content",
+            "createdAt",
+            "updatedAt",
+            "moduleId",
+            "tags",
+        ] {
+            assert!(v.get(key).is_some(), "missing wire key {key}");
+        }
+        assert_eq!(v["createdAt"], "2026-06-20", "date is ISO YYYY-MM-DD");
+        assert!(
+            v.get("created_at").is_none(),
+            "must be camelCase, not snake_case"
+        );
+    }
+
+    #[test]
+    fn entry_omits_module_id_when_absent() {
+        let e = NotebookEntry {
+            id: "nb001".into(),
+            title: String::new(),
+            content: String::new(),
+            created_at: D1,
+            updated_at: D1,
+            module_id: None,
+            tags: vec![],
+        };
+        let v = serde_json::to_value(&e).unwrap();
+        assert!(
+            v.get("moduleId").is_none(),
+            "absent moduleId omitted from the wire"
+        );
+    }
+
     #[test]
     fn list_skips_note_with_missing_or_corrupt_sidecar() {
         let tmp = ws();
