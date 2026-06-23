@@ -1,0 +1,55 @@
+/* Playful Dark — the same study garden after dusk: near-black greens, a brighter
+   accent so it still pops, warm amber spark. Shares all component rules with the light
+   variant (see tokens.playful.css); this file only re-fills the token contract. */
+
+:root[data-theme="playful-dark"] {
+  /* Neutrals — deep green-black, panels a step up */
+  --canvas: #0c0f0d;
+  --panel: #141815;
+  --panel-2: #1a1f1b;
+  --panel-3: #222824;
+  --lamplight: #eceee8;
+  --text: #eceee8;
+  --muted: #9da298;
+  --faint: #6b7167;
+  --line: #242a25;
+  --line-strong: #323a33;
+
+  /* Accent — brighter green for the dark canvas */
+  --gold: #2ecb8c;
+  --gold-bright: #46e0a0;
+  --gold-soft: rgba(46, 203, 140, 0.15);
+  --gold-line: rgba(46, 203, 140, 0.34);
+  --gold-press: #1f9e6b;
+  --on-accent: #04160e;
+
+  /* Amber spark */
+  --amber: #f2ac4e;
+  --amber-soft: rgba(242, 172, 78, 0.16);
+  --amber-press: #d2913a;
+
+  /* Stage palette — lifted for the dark canvas */
+  --stage-research: #5bb0e6;
+  --stage-curriculum: #2ecb8c;
+  --stage-teach: #f2ac4e;
+  --stage-assign: #f08ba6;
+  --stage-assess: #e47a6e;
+  --stage-review: #3fd0c0;
+  --stage-capstone: #a98bf0;
+
+  --success: #2ecb8c;
+  --danger: #e47a6e;
+
+  --font-serif: "Geist", system-ui, -apple-system, sans-serif;
+  --font-sans: "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+  --shadow: 0 16px 44px rgba(0, 0, 0, 0.5), 0 3px 12px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.34);
+
+  --lamp: radial-gradient(560px 240px at 92% -12%, var(--gold-soft), transparent 70%),
+    radial-gradient(460px 220px at 104% 130%, var(--amber-soft), transparent 70%);
+}

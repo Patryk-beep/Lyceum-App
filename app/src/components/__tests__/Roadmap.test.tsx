@@ -31,4 +31,35 @@ describe("RoadmapView", () => {
       screen.getByRole("button", { name: /run next step/i }),
     ).toBeInTheDocument();
   });
+
+  it("shows the remediation notice and relabels the CTA when remediating", () => {
+    const weak = [
+      { id: "m02-o1", text: "Conjugate regular -ar verbs", mastery: 0.62 },
+    ] as never;
+    renderView(<RoadmapView manifest={manifest} remediation={weak} />);
+    expect(screen.getByTestId("remediation-notice")).toBeInTheDocument();
+    expect(screen.getByText(/Conjugate regular -ar verbs/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /revisit the tricky parts/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /run next step/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("hides the remediation notice when not remediating (null or empty)", () => {
+    const { rerender } = renderView(
+      <RoadmapView manifest={manifest} remediation={null} />,
+    );
+    expect(screen.queryByTestId("remediation-notice")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /run next step/i })).toBeInTheDocument();
+
+    rerender(
+      <BrowserRouter>
+        <RoadmapView manifest={manifest} remediation={[]} />
+      </BrowserRouter>,
+    );
+    expect(screen.queryByTestId("remediation-notice")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /run next step/i })).toBeInTheDocument();
+  });
 });

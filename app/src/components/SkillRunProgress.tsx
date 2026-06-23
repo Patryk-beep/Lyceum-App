@@ -14,8 +14,9 @@ export function skillLabel(manifest?: Manifest): string {
     case "assign":
       return "Preparing your assignment";
     case "assess":
-    case "remediate":
       return "Assessing your work";
+    case "remediate":
+      return "Revisiting the tricky parts";
     case "capstone":
       return "Running the capstone";
     default:

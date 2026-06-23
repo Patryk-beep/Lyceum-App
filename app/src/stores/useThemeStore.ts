@@ -1,10 +1,23 @@
 import { create } from "zustand";
 
-export type ThemeName = "aurelia-dark" | "night" | "almanac" | "momentum";
+export type ThemeName =
+  | "playful"
+  | "playful-dark"
+  | "aurelia-dark"
+  | "night"
+  | "almanac"
+  | "momentum";
 
 const KEY = "lyceum-theme";
-const THEMES: ThemeName[] = ["aurelia-dark", "night", "almanac", "momentum"];
-const DEFAULT_THEME: ThemeName = "aurelia-dark";
+const THEMES: ThemeName[] = [
+  "playful",
+  "playful-dark",
+  "aurelia-dark",
+  "night",
+  "almanac",
+  "momentum",
+];
+const DEFAULT_THEME: ThemeName = "playful";
 
 function load(): ThemeName {
   try {

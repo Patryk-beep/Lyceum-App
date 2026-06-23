@@ -5,8 +5,8 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Emitter, State};
 
-use lyceum_core::model::Manifest;
-use lyceum_core::routing::derive_route;
+use lyceum_core::model::{AssignmentStatus, Manifest, ModuleId, ModuleStatus};
+use lyceum_core::routing::{derive_route, Route};
 use lyceum_engine::{
     canonical, doctor, run_step, BridgeEvent, ClaudeSession, DoctorReport, SpawnConfig,
 };
@@ -49,7 +49,11 @@ pub fn preflight(state: State<AppState>) -> PreflightReport {
     }
 }
 
-fn spawn_config(state: &AppState, resume: Option<String>) -> AppResult<SpawnConfig> {
+pub(crate) fn spawn_config(
+    state: &AppState,
+    resume: Option<String>,
+    read_only: bool,
+) -> AppResult<SpawnConfig> {
     let claude_bin = state
         .claude_bin
         .clone()
@@ -65,12 +69,13 @@ fn spawn_config(state: &AppState, resume: Option<String>) -> AppResult<SpawnConf
         plugin_dir,
         model: state.model.clone(),
         resume,
+        read_only,
     })
 }
 
 #[tauri::command]
 pub async fn claude_doctor(state: State<'_, AppState>) -> AppResult<DoctorReport> {
-    let cfg = spawn_config(state.inner(), None)?;
+    let cfg = spawn_config(state.inner(), None, false)?;
     doctor(&cfg).await.map_err(|e| AppError::msg(e.to_string()))
 }
 
@@ -83,7 +88,7 @@ pub async fn claude_smoke(
     state: State<'_, AppState>,
     prompt: String,
 ) -> AppResult<String> {
-    let cfg = spawn_config(state.inner(), None)?;
+    let cfg = spawn_config(state.inner(), None, false)?;
     let mut session = ClaudeSession::spawn(&cfg)
         .await
         .map_err(|e| AppError::msg(e.to_string()))?;
@@ -194,7 +199,7 @@ pub async fn create_subject(
          ask the user any questions. When done, output the line <<LYCEUM_DONE>>."
     );
 
-    let cfg = spawn_config(state.inner(), None)?;
+    let cfg = spawn_config(state.inner(), None, false)?;
     let app2 = app.clone();
     let ev_slug = slug.clone();
     let mut on_event = move |ev: lyceum_engine::BridgeEvent| {
@@ -272,6 +277,27 @@ pub struct StepDto {
     pub next_action: String,
 }
 
+/// Loop-safety post-condition for a remediation turn: the module must now have a pending
+/// (open/submitted) drill to work, OR have been mastered. A drifting `remediate` turn that
+/// wrote neither would make the router re-route to Remediate indefinitely. Pure over the
+/// manifest so it is unit-testable without a live session.
+fn remediation_progressed(manifest: &Manifest, module_id: &ModuleId) -> bool {
+    let mastered = manifest
+        .modules
+        .iter()
+        .find(|m| &m.id == module_id)
+        .map(|m| m.status == ModuleStatus::Mastered)
+        .unwrap_or(false);
+    let has_pending = manifest.assignments.iter().any(|a| {
+        &a.module_id == module_id
+            && matches!(
+                a.status,
+                AssignmentStatus::Open | AssignmentStatus::Submitted
+            )
+    });
+    mastered || has_pending
+}
+
 /// Run the next routed generative step for a subject through its warm session.
 /// Streams `BridgeEvent`s on `claude://session`; HALTs (returns `validationErrors`)
 /// if the reloaded manifest is impossible.
@@ -300,7 +326,7 @@ pub async fn run_subject_step(
         }
     };
 
-    let cfg = spawn_config(state.inner(), None)?;
+    let cfg = spawn_config(state.inner(), None, false)?;
     let app2 = app.clone();
     let ev_slug = slug.clone();
     let mut on_event = move |ev: lyceum_engine::BridgeEvent| {
@@ -339,7 +365,7 @@ pub async fn run_subject_step(
     }
     let session = guard.as_mut().expect("session present");
 
-    let report = run_step(
+    let mut report = run_step(
         session,
         &state.workspace,
         &slug,
@@ -349,6 +375,21 @@ pub async fn run_subject_step(
     )
     .await
     .map_err(|e| AppError::msg(e.to_string()))?;
+
+    // Loop-safety post-condition: a remediation turn MUST leave the module with a drill to
+    // work (or mastered). If a drifting `remediate` turn wrote neither, the router would
+    // route straight back to Remediate forever — surface it as a validation error (halts the
+    // step, prompts a re-run) instead of silently looping.
+    if let Route::Remediate { module_id, .. } = &decision.route {
+        if let Some(m) = &report.manifest {
+            if report.validation_errors.is_empty() && !remediation_progressed(m, module_id) {
+                report.validation_errors.push(
+                    "remediation produced no new practice assignment — re-run this step"
+                        .to_string(),
+                );
+            }
+        }
+    }
 
     let next_action = report
         .manifest
@@ -389,6 +430,18 @@ pub async fn delete_subject(state: State<'_, AppState>, slug: String) -> AppResu
             let _ = tokio::time::timeout(Duration::from_secs(5), session.shutdown()).await;
         }
     }
+    // Same detach-first teardown for the subject's TUTOR cell, or its warm child leaks and a
+    // racing ask_tutor (which rechecks manifest existence after locking) can't resurrect the dir.
+    let tutor_cell = {
+        let mut map = state.tutor_sessions.lock().await;
+        map.remove(&slug)
+    };
+    if let Some(cell) = tutor_cell {
+        let mut guard = cell.lock().await;
+        if let Some(session) = guard.take() {
+            let _ = tokio::time::timeout(Duration::from_secs(5), session.shutdown()).await;
+        }
+    }
     crate::delete::delete_subject_dir(&state.workspace, &slug)
 }
 
@@ -408,8 +461,9 @@ pub async fn reset_curriculum(state: State<'_, AppState>, slug: String) -> AppRe
 
 #[cfg(test)]
 mod tests {
-    use super::{file_is_valid_json, newly_fired_milestones};
-    use crate::state::{AppState, MAX_CONCURRENT_TURNS};
+    use super::{file_is_valid_json, newly_fired_milestones, remediation_progressed};
+    use crate::state::{AppState, MAX_CONCURRENT_TURNS, MAX_CONCURRENT_TUTOR};
+    use lyceum_core::model::{Manifest, ModuleId};
     use std::fs;
     use std::sync::Arc;
     use tokio::sync::Semaphore;
@@ -423,7 +477,25 @@ mod tests {
             model: "test".to_string(),
             sessions: Default::default(),
             turn_slots: Arc::new(Semaphore::new(MAX_CONCURRENT_TURNS)),
+            tutor_sessions: Default::default(),
+            tutor_slots: Arc::new(Semaphore::new(MAX_CONCURRENT_TUTOR)),
         }
+    }
+
+    #[tokio::test]
+    async fn tutor_cell_is_per_slug_and_distinct_from_skill_cell() {
+        let st = test_state();
+        let t1 = st.tutor_session_cell("spanish").await;
+        let t2 = st.tutor_session_cell("spanish").await;
+        let skill = st.session_cell("spanish").await;
+        assert!(
+            Arc::ptr_eq(&t1, &t2),
+            "same slug returns the same tutor cell"
+        );
+        assert!(
+            !Arc::ptr_eq(&t1, &skill),
+            "the tutor cell is distinct from the skill cell, so they don't share a lock"
+        );
     }
 
     #[tokio::test]
@@ -465,6 +537,47 @@ mod tests {
             st.turn_slots.clone().try_acquire_owned().is_ok(),
             "a freed slot lets the next turn start"
         );
+    }
+
+    fn manifest_json(modules: &str, assignments: &str) -> Manifest {
+        let s = format!(
+            r#"{{"subject":"S","slug":"s","created":"2026-06-01","updated":"2026-06-01",
+                "scale":{{"start":1,"target":2}},"current":{{"status":"in-progress"}},
+                "modules":{modules},"assignments":{assignments},"settings":{{}}}}"#
+        );
+        serde_json::from_str(&s).expect("valid manifest")
+    }
+
+    #[test]
+    fn remediation_progress_requires_pending_or_mastered() {
+        let m01 = ModuleId("m01".into());
+        let in_progress =
+            r#"[{"id":"m01","title":"t","level":1,"status":"in-progress","masteryThreshold":0.9}]"#;
+
+        // No assignment + module in-progress → NOT progressed (the loop case we must catch).
+        assert!(!remediation_progressed(
+            &manifest_json(in_progress, "[]"),
+            &m01
+        ));
+
+        // A fresh open drill on the module → progressed.
+        let open = r#"[{"id":"a02","moduleId":"m01","type":"drill","file":"f","status":"open"}]"#;
+        assert!(remediation_progressed(
+            &manifest_json(in_progress, open),
+            &m01
+        ));
+
+        // Mastered module (no pending) → progressed.
+        let mastered =
+            r#"[{"id":"m01","title":"t","level":1,"status":"mastered","masteryThreshold":0.9}]"#;
+        assert!(remediation_progressed(&manifest_json(mastered, "[]"), &m01));
+
+        // A pending drill on a DIFFERENT module does not count.
+        let other = r#"[{"id":"a02","moduleId":"m02","type":"drill","file":"f","status":"open"}]"#;
+        assert!(!remediation_progressed(
+            &manifest_json(in_progress, other),
+            &m01
+        ));
     }
 
     #[test]

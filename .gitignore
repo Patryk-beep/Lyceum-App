@@ -28,3 +28,9 @@ target/
 
 # Tooling cruft (claude-flow / ruflo session + data artifacts)
 .claude-flow/
+.swarm/
+.hive-mind/
+ruvector.db
+ruvector.db-shm
+ruvector.db-wal
+config/agents/

@@ -213,6 +213,7 @@ pub(crate) fn route_to_phase(route: &Route) -> Option<Phase> {
         Route::CreateAssignment { .. } | Route::CompleteOpenAssignment { .. } => {
             Some(Phase::Assign)
         }
+        Route::Remediate { .. } => Some(Phase::Remediate),
         Route::Assess { .. } => Some(Phase::Assess),
         Route::Capstone => Some(Phase::Capstone),
         Route::Research | Route::Placement | Route::BuildCurriculum | Route::CourseComplete => None,

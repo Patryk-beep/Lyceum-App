@@ -245,8 +245,10 @@ mod tests {
             .expect("SessionInit emitted");
         assert!(*si.0, "mcp_servers must be empty (isolation)");
         assert_eq!(si.1.as_deref(), Some("none"), "Max pool, not per-token");
-        assert_eq!(si.2.len(), 9, "all 9 lyceum skills present: {:?}", si.2);
+        assert_eq!(si.2.len(), 11, "all 11 lyceum skills present: {:?}", si.2);
         assert!(si.2.iter().any(|s| s == "lyceum:learn"));
+        assert!(si.2.iter().any(|s| s == "lyceum:remediate"));
+        assert!(si.2.iter().any(|s| s == "lyceum:tutor"));
         assert!(!si.3.is_empty());
         // init must NOT trigger an auth warning when source is none
         assert!(!events

@@ -11,6 +11,8 @@ import type {
   StepDto,
   StreakInfo,
   SubjectSummary,
+  TutorScope,
+  TutorThread,
   WorkspaceInfo,
 } from "./types";
 
@@ -55,4 +57,12 @@ export const api = {
   deleteSubject: (slug: string) => invoke<void>("delete_subject", { slug }),
   resetCurriculum: (slug: string) =>
     invoke<Manifest>("reset_curriculum", { slug }),
+  // Tutor: a read-only in-context question. Streams on `claude://tutor`; resolves with the
+  // final answer text. Never advances curriculum state.
+  askTutor: (slug: string, question: string, scope: TutorScope) =>
+    invoke<string>("ask_tutor", { slug, question, scope }),
+  readTutorThread: (slug: string) =>
+    invoke<TutorThread>("read_tutor_thread", { slug }),
+  clearTutorThread: (slug: string) =>
+    invoke<void>("clear_tutor_thread", { slug }),
 };

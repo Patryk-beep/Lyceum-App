@@ -8,6 +8,7 @@ import { api } from "../lib/ipc";
 import { useSubjects } from "../lib/query";
 import { useEngineStore } from "../stores/useEngineStore";
 import { useThemeStore, type ThemeName } from "../stores/useThemeStore";
+import { useTutorStore } from "../stores/useTutorStore";
 import { useZenStore } from "../stores/useZenStore";
 import { parseSubjectRoute } from "../theme/loop";
 
@@ -136,6 +137,15 @@ export function CommandPalette({
       label: "Open capstone",
       keywords: "capstone final project deliverable",
       run: () => go(`/subject/${slug}/capstone`),
+    });
+    actionItems.push({
+      id: "act:tutor",
+      label: "Ask the tutor",
+      keywords: "tutor ask question help explain hint why understand",
+      run: () => {
+        close();
+        useTutorStore.getState().openPanel();
+      },
     });
   }
   if (zenAvailable) {

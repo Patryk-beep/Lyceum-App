@@ -6,9 +6,11 @@ import { useParams } from "react-router-dom";
 import { ConfirmDestructive } from "../components/ConfirmDestructive";
 import { MasterySeal, type SealState } from "../components/MasterySeal";
 import { MasteryMeter } from "../components/MasteryMeter";
+import { RemediationNotice } from "../components/RemediationNotice";
 import { api } from "../lib/ipc";
-import { useManifest, useResetCurriculum } from "../lib/query";
-import type { Manifest, Module } from "../lib/types";
+import { useManifest, useNextStep, useResetCurriculum } from "../lib/query";
+import { currentWeakObjectives } from "../lib/remediation";
+import type { Manifest, Module, Objective } from "../lib/types";
 import { useEngineStore } from "../stores/useEngineStore";
 
 function meanMastery(m: Module): number | null {
@@ -31,11 +33,16 @@ export function RoadmapView({
   manifest,
   onRunStep,
   running = false,
+  remediation = null,
 }: {
   manifest: Manifest;
   onRunStep?: () => void;
   running?: boolean;
+  /** Gate-failing objectives when the next step is remediation — drives the notice + the
+   *  CTA label. `null`/empty ⇒ the normal "Run next step" affordance. */
+  remediation?: Objective[] | null;
 }) {
+  const remediating = !!remediation && remediation.length > 0;
   const currentId = manifest.current.moduleId;
   // Mirror the core's `Manifest::display_level()`: explicit level, else a numeric
   // scale.start, else 1 (a "test" start has no level until placement runs). The
@@ -53,13 +60,19 @@ export function RoadmapView({
         </div>
       </header>
 
+      {remediating && <RemediationNotice objectives={remediation!} />}
+
       <button
         className="btn btn--primary"
         onClick={onRunStep}
         disabled={running}
         style={{ marginBottom: 18 }}
       >
-        {running ? "Working…" : "Run next step"}
+        {running
+          ? "Working…"
+          : remediating
+            ? "Revisit the tricky parts"
+            : "Run next step"}
       </button>
 
       <ol className="roadmap__timeline">
@@ -99,6 +112,9 @@ export function Roadmap() {
   const { slug = "" } = useParams();
   const qc = useQueryClient();
   const { data: manifest, isLoading, error } = useManifest(slug);
+  // Advisory: the authoritative next route. `run_subject_step` re-derives at run time, so a
+  // failed/loading fetch must never block the run — it just falls back to "Run next step".
+  const { data: route } = useNextStep(slug);
   const engineStart = useEngineStore((s) => s.start);
   const reset = useResetCurriculum(slug);
   const [confirmingReset, setConfirmingReset] = useState(false);
@@ -111,6 +127,7 @@ export function Roadmap() {
       qc.invalidateQueries({ queryKey: ["subjects"] });
       qc.invalidateQueries({ queryKey: ["review", slug] });
       qc.invalidateQueries({ queryKey: ["analytics", slug] });
+      qc.invalidateQueries({ queryKey: ["nextStep", slug] });
     },
   });
 
@@ -118,12 +135,16 @@ export function Roadmap() {
   if (error || !manifest)
     return <div className="muted">Could not load subject: {String(error)}</div>;
 
+  const remediation =
+    route?.kind === "remediate" ? currentWeakObjectives(manifest) : null;
+
   return (
     <>
       <RoadmapView
         manifest={manifest}
         onRunStep={() => step.mutate()}
         running={step.isPending}
+        remediation={remediation}
       />
       <div className="danger-zone">
         <div className="danger-zone__label">Danger zone</div>

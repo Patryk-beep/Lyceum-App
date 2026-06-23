@@ -20,6 +20,9 @@ describe("skillLabel", () => {
       skillLabel(m({ modules: [{}] as never, current: { phase: "assess", status: "x" } })),
     ).toBe("Assessing your work");
     expect(
+      skillLabel(m({ modules: [{}] as never, current: { phase: "remediate", status: "x" } })),
+    ).toBe("Revisiting the tricky parts");
+    expect(
       skillLabel(m({ modules: [{}] as never, current: { phase: "capstone", status: "x" } })),
     ).toBe("Running the capstone");
   });

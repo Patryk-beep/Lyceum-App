@@ -14,6 +14,11 @@ use tokio::sync::{Mutex, Semaphore};
 /// more subjects running at once.
 pub const MAX_CONCURRENT_TURNS: usize = 4;
 
+/// Max concurrent live TUTOR turns (a separate pool from skill turns so a chatty learner
+/// can't starve the curriculum engine, and vice-versa). Each subject can hold a tutor child
+/// AND a skill child at once, so total live children ≤ MAX_CONCURRENT_TURNS + this.
+pub const MAX_CONCURRENT_TUTOR: usize = 2;
+
 /// One lazily-spawned warm `claude` child per subject, behind its own async lock.
 pub type SessionCell = Arc<Mutex<Option<ClaudeSession>>>;
 
@@ -32,6 +37,12 @@ pub struct AppState {
     pub sessions: Mutex<HashMap<String, SessionCell>>,
     /// Bounds concurrent live turns (see [`MAX_CONCURRENT_TURNS`]).
     pub turn_slots: Arc<Semaphore>,
+    /// Per-subject TUTOR session cell — a SECOND warm child per subject, distinct from the
+    /// skill cell, so a tutor turn and a skill turn for the same subject run on different
+    /// locks (concurrently) instead of serializing.
+    pub tutor_sessions: Mutex<HashMap<String, SessionCell>>,
+    /// Bounds concurrent live tutor turns (see [`MAX_CONCURRENT_TUTOR`]).
+    pub tutor_slots: Arc<Semaphore>,
 }
 
 impl AppState {
@@ -44,6 +55,15 @@ impl AppState {
     /// for the entry/clone (never across a turn).
     pub async fn session_cell(&self, slug: &str) -> SessionCell {
         let mut map = self.sessions.lock().await;
+        map.entry(slug.to_string())
+            .or_insert_with(|| Arc::new(Mutex::new(None)))
+            .clone()
+    }
+
+    /// Get (or lazily create) the TUTOR session cell for `slug` — a distinct cell from
+    /// [`session_cell`], so tutor and skill turns for one subject don't share a lock.
+    pub async fn tutor_session_cell(&self, slug: &str) -> SessionCell {
+        let mut map = self.tutor_sessions.lock().await;
         map.entry(slug.to_string())
             .or_insert_with(|| Arc::new(Mutex::new(None)))
             .clone()

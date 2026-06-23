@@ -1,0 +1,98 @@
+/* Playful — a warm, gamified "study garden": cream paper, fresh-green accent, amber
+   spark. Imported from the claude.ai/design project (Lyceum Redesign Playful.dc.html).
+   Fills the same token contract as Night; the shared playful component rules at the
+   foot are scoped to [data-theme^="playful"] so the other themes are untouched and the
+   light/dark pair share them. */
+
+:root[data-theme="playful"] {
+  /* Neutrals — paper surfaces on a warm cream canvas */
+  --canvas: #fbfaf6;
+  --panel: #ffffff;
+  --panel-2: #f4f3ee;
+  --panel-3: #eceae2;
+  --lamplight: #1a1a14;
+  --text: #1a1a14;
+  --muted: #6e6c60;
+  --faint: #9c998a;
+  --line: #eae8e0;
+  --line-strong: #dbd8cc;
+
+  /* Accent — fresh green (the contract's "gold" slot) */
+  --gold: #11a06a;
+  --gold-bright: #16b679;
+  --gold-soft: rgba(17, 160, 106, 0.12);
+  --gold-line: rgba(17, 160, 106, 0.3);
+  --gold-press: #0b7a50;
+  --on-accent: #ffffff;
+
+  /* Amber spark (secondary) — streaks, sparks, "today" accents */
+  --amber: #e8902a;
+  --amber-soft: rgba(232, 144, 42, 0.14);
+  --amber-press: #c9761a;
+
+  /* Stage palette — a friendly multi-hue set in the playful key */
+  --stage-research: #2e93d6;
+  --stage-curriculum: #11a06a;
+  --stage-teach: #e8902a;
+  --stage-assign: #e5688a;
+  --stage-assess: #d2554a;
+  --stage-review: #13a89b;
+  --stage-capstone: #8b6ce6;
+
+  --success: #11a06a;
+  --danger: #d2554a;
+
+  /* Type — Geist for everything, Geist Mono for metrics/code */
+  --font-serif: "Geist", system-ui, -apple-system, sans-serif;
+  --font-sans: "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+  --shadow: 0 14px 40px rgba(30, 25, 10, 0.1), 0 3px 10px rgba(30, 25, 10, 0.06);
+  --shadow-sm: 0 1px 2px rgba(30, 25, 10, 0.05), 0 2px 6px rgba(30, 25, 10, 0.05);
+
+  --lamp: radial-gradient(560px 240px at 92% -12%, var(--gold-soft), transparent 70%),
+    radial-gradient(460px 220px at 104% 130%, var(--amber-soft), transparent 70%);
+}
+
+/* ===== Shared playful component rules (light + dark) ============================
+   Scoped to both "playful" and "playful-dark". Authored once here; this file is
+   always imported alongside the dark token file. */
+
+/* Headings ride the Geist sans, heavy and tight, not the serif default. */
+:root[data-theme^="playful"] h1,
+:root[data-theme^="playful"] h2,
+:root[data-theme^="playful"] h3 {
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+/* Metrics/mono use Geist Mono for that tactile, gamey readout feel. */
+:root[data-theme^="playful"] .metric {
+  font-family: var(--font-mono);
+}
+
+/* 3D-press pill: the signature playful primary button. */
+:root[data-theme^="playful"] .btn--primary {
+  color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--gold-press);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+}
+:root[data-theme^="playful"] .btn--primary:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--gold-press);
+}
+
+/* Subject-card hover lift + a thicker tone bar. */
+:root[data-theme^="playful"] .subject-card {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+:root[data-theme^="playful"] .subject-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+:root[data-theme^="playful"] .subject-card__accent {
+  height: 5px;
+}

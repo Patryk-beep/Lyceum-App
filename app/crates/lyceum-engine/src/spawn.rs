@@ -33,6 +33,10 @@ pub struct SpawnConfig {
     pub plugin_dir: PathBuf,
     pub model: String,
     pub resume: Option<String>,
+    /// Read-only child: restrict the toolset to an ALLOWLIST (`Read`/`Grep`/`Glob`) so it
+    /// physically cannot write any file (no `Write`/`Edit`/`Bash`/`Task`/MCP). Used for the
+    /// tutor — a denylist would leave `Bash` (`echo > manifest.json`) as a write path.
+    pub read_only: bool,
 }
 
 impl SpawnConfig {
@@ -60,6 +64,15 @@ impl SpawnConfig {
             "--model".into(),
             self.model.clone(),
         ];
+        // Read-only allowlist (tutor): the ONLY tools the child gets are Read/Grep/Glob (to
+        // read the workspace) and Skill (to load the `lyceum:tutor` guidance). It cannot
+        // write/exec — Write/Edit/Bash/Task/MCP are all excluded by the allowlist (and a
+        // Skill it loads inherits the same restriction, so it can't write either). An
+        // allowlist closes every mutation path at once; a denylist would have to enumerate.
+        if self.read_only {
+            a.push("--allowed-tools".into());
+            a.push("Read,Grep,Glob,Skill".into());
+        }
         if let Some(id) = &self.resume {
             a.push("--resume".into());
             a.push(id.clone());
@@ -184,6 +197,7 @@ mod tests {
             plugin_dir: "/plug".into(),
             model: "claude-opus-4-8".into(),
             resume: None,
+            read_only: false,
         };
         let argv = cfg.to_argv();
         let joined = argv.join(" ");
@@ -209,8 +223,38 @@ mod tests {
             plugin_dir: "/plug".into(),
             model: "m".into(),
             resume: Some("sess-123".into()),
+            read_only: false,
         };
         assert!(cfg.to_argv().join(" ").contains("--resume sess-123"));
+    }
+
+    #[test]
+    fn read_only_argv_uses_a_read_allowlist_and_no_write_tools() {
+        let cfg = SpawnConfig {
+            claude_bin: "claude".into(),
+            workspace: "/ws".into(),
+            plugin_dir: "/plug".into(),
+            model: "m".into(),
+            resume: None,
+            read_only: true,
+        };
+        let joined = cfg.to_argv().join(" ");
+        assert!(
+            joined.contains("--allowed-tools Read,Grep,Glob,Skill"),
+            "read-only child is restricted to the read+skill allowlist: {joined}"
+        );
+        for banned in ["Write", "Edit", "Bash", "Task", "MultiEdit", "NotebookEdit"] {
+            assert!(
+                !joined.contains(banned),
+                "read-only argv must not grant {banned}: {joined}"
+            );
+        }
+        // A writable child gets NO allowlist (full default toolset, argv unchanged).
+        let writable = SpawnConfig {
+            read_only: false,
+            ..cfg
+        };
+        assert!(!writable.to_argv().join(" ").contains("--allowed-tools"));
     }
 
     #[test]

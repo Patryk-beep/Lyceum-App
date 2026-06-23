@@ -37,6 +37,7 @@ async fn m1_bridge_and_skill_gates() {
         plugin_dir: staged,
         model: "claude-opus-4-8".into(),
         resume: None,
+        read_only: false,
     };
 
     // ---- Skill gate + bridge gate (via doctor) ----
@@ -53,12 +54,16 @@ async fn m1_bridge_and_skill_gates() {
     );
     assert_eq!(
         report.lyceum_skills.len(),
-        9,
-        "all 9 lyceum skills must load"
+        11,
+        "all 11 lyceum skills must load (incl. remediate + tutor)"
     );
     assert!(
         report.lyceum_skills.iter().any(|s| s == "lyceum:learn"),
         "lyceum:learn present"
+    );
+    assert!(
+        report.lyceum_skills.iter().any(|s| s == "lyceum:tutor"),
+        "lyceum:tutor present"
     );
     assert!(report.result_ok, "probe turn returned a non-error result");
     assert!(report.ok, "doctor overall ok; notes={:?}", report.notes);
@@ -94,5 +99,44 @@ async fn m1_bridge_and_skill_gates() {
         o2.text.to_lowercase().contains("banana"),
         "resumed thread recalled the codeword; got {:?}",
         o2.text
+    );
+}
+
+/// B1 (tutor): a `read_only` child is structurally write-incapable — the `--allowed-tools
+/// Read,Grep,Glob` allowlist denies Write/Edit/Bash/Task, so even when asked to write a file
+/// it cannot. Proves the guarantee by EFFECT (file never appears), not just by argv.
+#[tokio::test]
+async fn read_only_child_physically_cannot_write() {
+    if !live() {
+        eprintln!("SKIP: set LYCEUM_LIVE_CLAUDE=1 to run the read-only write-denial test");
+        return;
+    }
+    let claude = resolve_claude(None).expect("claude binary resolves");
+    let tmp = tempfile::tempdir().unwrap();
+    let ws = canonical(tmp.path()).unwrap();
+    let staged = workspace::stage_plugin(&vendored_plugin(), &tmp.path().join("stage"))
+        .expect("plugin stages");
+
+    let cfg = SpawnConfig {
+        claude_bin: claude,
+        workspace: ws.clone(),
+        plugin_dir: staged,
+        model: "claude-opus-4-8".into(),
+        resume: None,
+        read_only: true,
+    };
+    let mut s = ClaudeSession::spawn(&cfg).await.unwrap();
+    let _ = s
+        .run_turn(
+            "Create a file named proof.txt containing the text WROTE in the current working \
+             directory, then reply DONE.",
+            |_| {},
+        )
+        .await
+        .unwrap();
+    s.shutdown().await;
+    assert!(
+        !ws.join("proof.txt").exists(),
+        "a read-only (allowlist Read/Grep/Glob) child must be UNABLE to write any file"
     );
 }
