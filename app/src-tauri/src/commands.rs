@@ -177,3 +177,65 @@ pub fn get_levels() -> Vec<(u8, &'static str, &'static str)> {
         (6, "Master", "extend the practice; teach the field"),
     ]
 }
+
+// --- Notebook (app-owned Markdown notes; never touches the manifest) ----------
+
+#[tauri::command]
+pub fn list_notebooks(
+    state: State<AppState>,
+    slug: String,
+) -> AppResult<Vec<crate::notebook::NotebookEntry>> {
+    crate::notebook::list_notebooks(&state.workspace, &slug)
+}
+
+#[tauri::command]
+pub fn read_notebook(
+    state: State<AppState>,
+    slug: String,
+    id: String,
+) -> AppResult<crate::notebook::NotebookEntry> {
+    crate::notebook::read_notebook(&state.workspace, &slug, &id)
+}
+
+/// Create a note. `moduleId` (optional) anchors it to the current lesson's module.
+#[tauri::command]
+pub fn create_notebook(
+    state: State<AppState>,
+    slug: String,
+    title: String,
+    content: String,
+    module_id: Option<String>,
+) -> AppResult<crate::notebook::NotebookEntry> {
+    crate::notebook::create_notebook(
+        &state.workspace,
+        &slug,
+        &title,
+        &content,
+        module_id.as_deref(),
+        workspace::today(),
+    )
+}
+
+/// Overwrite a note's title + body (preserves createdAt/moduleId/tags, bumps updatedAt).
+#[tauri::command]
+pub fn update_notebook(
+    state: State<AppState>,
+    slug: String,
+    id: String,
+    title: String,
+    content: String,
+) -> AppResult<crate::notebook::NotebookEntry> {
+    crate::notebook::update_notebook(
+        &state.workspace,
+        &slug,
+        &id,
+        &title,
+        &content,
+        workspace::today(),
+    )
+}
+
+#[tauri::command]
+pub fn delete_notebook(state: State<AppState>, slug: String, id: String) -> AppResult<()> {
+    crate::notebook::delete_notebook(&state.workspace, &slug, &id)
+}

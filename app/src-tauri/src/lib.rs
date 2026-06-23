@@ -5,6 +5,7 @@ mod commands;
 mod delete;
 mod engine_cmds;
 mod error;
+mod notebook;
 mod prompts;
 mod service;
 mod state;
@@ -103,6 +104,11 @@ pub fn run() {
             commands::delete_assignment,
             commands::submit_assignment,
             commands::submit_capstone,
+            commands::list_notebooks,
+            commands::read_notebook,
+            commands::create_notebook,
+            commands::update_notebook,
+            commands::delete_notebook,
             engine_cmds::preflight,
             engine_cmds::claude_doctor,
             engine_cmds::claude_smoke,
