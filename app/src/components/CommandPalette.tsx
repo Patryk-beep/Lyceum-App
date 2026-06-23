@@ -36,6 +36,7 @@ const STAGES: { seg: string; label: string }[] = [
   { seg: "review", label: "Review" },
   { seg: "capstone", label: "Capstone" },
   { seg: "analytics", label: "Analytics" },
+  { seg: "notebook", label: "Notebook" },
 ];
 
 const GLOBAL: [string, string][] = [

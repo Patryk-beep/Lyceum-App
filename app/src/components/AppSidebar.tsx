@@ -208,6 +208,20 @@ export function AppSidebarView({
           >
             Analytics
           </Link>
+          <Link
+            to={`/subject/${slug}/notebook`}
+            className={
+              "sidebar__item sidebar__item--tool" +
+              (pathname === `/subject/${slug}/notebook`
+                ? " sidebar__item--active"
+                : "")
+            }
+            aria-current={
+              pathname === `/subject/${slug}/notebook` ? "page" : undefined
+            }
+          >
+            Notebook
+          </Link>
         </nav>
       )}
 

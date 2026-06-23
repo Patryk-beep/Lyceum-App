@@ -161,6 +161,7 @@ const SEG_LABEL: Record<string, string> = {
   review: "Review",
   capstone: "Capstone",
   analytics: "Analytics",
+  notebook: "Notebook",
   artifact: "Artifact",
 };
 
@@ -168,6 +169,7 @@ const GLOBAL_LABEL: Record<string, string> = {
   "/library": "Library",
   "/review": "Review",
   "/analytics": "Analytics",
+  "/notebook": "Notebook",
   "/new": "New subject",
   "/settings": "Settings",
   "/diagnostics": "Diagnostics",
@@ -196,7 +198,8 @@ export function crumbsFor(
   // route (lessons/assignments), not the raw singular segment. `artifact/*` has
   // no list route, so its stage crumb is a plain (non-linking) label.
   const stageSeg = segToLoopKey(seg) ?? seg;
-  const routable = segToLoopKey(seg) !== null || seg === "analytics";
+  const routable =
+    segToLoopKey(seg) !== null || seg === "analytics" || seg === "notebook";
   const crumbs: Crumb[] = [
     { label: "Library", to: "/library" },
     { label: subjectName ?? slug, to: `/subject/${slug}` },
