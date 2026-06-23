@@ -54,6 +54,8 @@ export function routeKindToStage(kind: string): StageKey {
     case "createAssignment":
     case "completeAssignment":
       return "assign";
+    case "remediate":
+      return "teach"; // remediation is a re-teach
     case "assess":
       return "assess";
     case "capstone":

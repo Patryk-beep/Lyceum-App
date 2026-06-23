@@ -4,7 +4,9 @@ import { useThemeStore, type ThemeName } from "../stores/useThemeStore";
 import { checkForUpdate } from "../lib/updates";
 
 const THEMES: { key: ThemeName; label: string; hint: string }[] = [
-  { key: "aurelia-dark", label: "Aurelia Dark", hint: "gilded indigo by candle-gold (default)" },
+  { key: "playful", label: "Playful", hint: "warm cream, fresh green, gamified (default)" },
+  { key: "playful-dark", label: "Playful Dark", hint: "the study garden after dusk" },
+  { key: "aurelia-dark", label: "Aurelia Dark", hint: "gilded indigo by candle-gold" },
   { key: "night", label: "Night", hint: "after dark by lamplight" },
   { key: "almanac", label: "Almanac", hint: "warm parchment, daylight" },
   { key: "momentum", label: "Momentum", hint: "cool, high-contrast" },

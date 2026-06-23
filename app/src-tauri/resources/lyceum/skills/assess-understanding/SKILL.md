@@ -49,7 +49,7 @@ Then read the active subject manifest at `learning/<slug>/manifest.json`. If no 
    - Unlock dependents: any module whose `prereqs` are now all `mastered` becomes `available`.
    - Point `current.moduleId` at the next available module — **lowest level, then lowest id** — and set `current.phase:"teach"`, `current.status:"in-progress"`.
    - If mastering this module completes the `scale.target` level (all modules through target are mastered), set `current.status:"capstone"` instead and leave `current.moduleId` as-is so `learn` routes to `capstone`.
-   Otherwise **REMEDIATE**: set `current.phase:"remediate"`, leave the module `in-progress`, and route on the weakest objective — back to `teach-lesson` (re-teach the concept) if the gap is conceptual, or `create-assignment` (a targeted deliberate-practice drill) if the gap is procedural. Tell the user which command to run and why.
+   Otherwise **REMEDIATE**: set `current.phase:"remediate"`, leave the module `in-progress`, and route on the weakest objective. In the **Lyceum app** the router invokes `lyceum:remediate`, which re-teaches the weak objectives a different way and issues one targeted drill in a single step. In the standalone chain, route back to `teach-lesson` (re-teach the concept) if the gap is conceptual, or `create-assignment` (a targeted deliberate-practice drill) if the gap is procedural. Tell the user which command to run and why.
 
 9. **Finish.** Bump `manifest.updated` to today, rewrite `progress.md` in the MANIFEST.md format, and append a line to `reviews.md` only if you reset/added review items. Tell the learner the single next step.
 

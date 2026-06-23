@@ -1,7 +1,7 @@
 {
   "name": "lyceum",
   "displayName": "Lyceum",
-  "description": "A portable, evidence-based meta-learning system. A chain of nine skills that teaches any subject from absolute beginner to mastery using the techniques with the strongest support in learning science: retrieval practice, spaced repetition, interleaving, deliberate practice, mastery learning, and backward design. All state lives in one manifest.json per subject, so courses pause, resume, and transfer across sessions and machines.",
+  "description": "A portable, evidence-based meta-learning system. A chain of eleven skills that teaches any subject from absolute beginner to mastery using the techniques with the strongest support in learning science: retrieval practice, spaced repetition, interleaving, deliberate practice, mastery learning (with targeted remediation on a failed gate), backward design, and an on-demand read-only tutor for in-context questions. All state lives in one manifest.json per subject, so courses pause, resume, and transfer across sessions and machines.",
   "version": "1.0.0",
   "author": {
     "name": "Patryk Szakody",

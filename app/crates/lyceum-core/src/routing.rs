@@ -4,7 +4,10 @@
 //! goes through Claude/the engine.
 
 use crate::mastery::all_target_modules_mastered;
-use crate::model::{AssignmentStatus, CurrentStatus, Manifest, ModuleId, ModuleStatus, ScaleStart};
+use crate::model::{
+    AssignmentStatus, CurrentStatus, Manifest, Module, ModuleId, ModuleStatus, ObjectiveId,
+    ScaleStart,
+};
 
 /// Which workspace files exist on disk (the Tauri layer stats these and fills it
 /// in, keeping `lyceum-core` free of I/O for routing).
@@ -25,6 +28,13 @@ pub enum Route {
     },
     CreateAssignment {
         module_id: ModuleId,
+    },
+    /// A failed assessment: re-teach the weak objectives a different way, then re-drill.
+    /// `weak_objectives` are the gate-failing ids (unscored or below threshold) so the
+    /// skill — and the prompt — can target exactly what didn't land.
+    Remediate {
+        module_id: ModuleId,
+        weak_objectives: Vec<ObjectiveId>,
     },
     CompleteOpenAssignment {
         assignment_id: crate::model::AssignmentId,
@@ -147,10 +157,31 @@ pub fn derive_route(manifest: &Manifest, disk: &DiskState) -> RouteDecision {
             );
         }
 
-        // (v) taught, nothing pending, and NOT yet mastered — create an assignment.
-        // A module already `mastered` falls through to the capstone/advance check
-        // below (we never create an assignment for a mastered module).
+        // (v) taught, nothing pending, and NOT yet mastered.
+        // A module already `mastered` falls through to the capstone/advance check below.
         if module.status != ModuleStatus::Mastered {
+            // Has THIS module ever been assessed? (a graded assignment scoped to it — never
+            // a stale graded assignment on an old module, mirroring the open/submitted scope.)
+            let has_graded = manifest
+                .assignments
+                .iter()
+                .any(|a| a.module_id == module.id && a.status == AssignmentStatus::Graded);
+            let weak = gate_failing_objectives(module);
+            // After a failed assessment (≥1 graded drill) with objectives still short of the
+            // gate, RE-TEACH the weak objectives, then re-drill — instead of blindly
+            // re-issuing the same assignment. A module with no graded drill yet (just taught)
+            // takes the first-drill path; so does a degenerate 0-objective module (empty
+            // `weak` ⇒ it keeps its pre-existing create-assignment behavior, never a new
+            // remediation loop).
+            if has_graded && !weak.is_empty() {
+                return decide(
+                    Route::Remediate {
+                        module_id: module.id.clone(),
+                        weak_objectives: weak,
+                    },
+                    "the last check left a few objectives short — revisit them, then practice again",
+                );
+            }
             return decide(
                 Route::CreateAssignment {
                     module_id: module.id.clone(),
@@ -175,6 +206,23 @@ pub fn derive_route(manifest: &Manifest, disk: &DiskState) -> RouteDecision {
         },
         "default — continue teaching the current module",
     )
+}
+
+/// Objectives short of the module's mastery gate: unscored (`mastery == None`) or below
+/// `mastery_threshold`. This mirrors `mastery::module_clears_gate` (which fails the gate on
+/// any `None` or sub-threshold score), so a **non-empty** result is equivalent to "the module
+/// has objectives AND does not clear the gate" — the exact condition for remediation.
+pub fn gate_failing_objectives(module: &Module) -> Vec<ObjectiveId> {
+    module
+        .objectives
+        .iter()
+        .filter(|o| {
+            o.mastery
+                .map(|m| m < module.mastery_threshold)
+                .unwrap_or(true)
+        })
+        .map(|o| o.id.clone())
+        .collect()
 }
 
 fn lowest_module(manifest: &Manifest) -> Option<ModuleId> {
@@ -343,5 +391,163 @@ mod tests {
             derive_route(&man, &full_disk()).route,
             Route::CourseComplete
         );
+    }
+
+    // --- remediation -------------------------------------------------------
+
+    fn obj(id: &str, mastery: Option<f64>) -> Objective {
+        Objective {
+            id: ObjectiveId(id.into()),
+            text: "objective".into(),
+            bloom: None,
+            mastery,
+            attempts: mastery.map(|_| 1),
+            last_assessed: None,
+        }
+    }
+
+    fn graded(id: &str, module_id: &str) -> Assignment {
+        Assignment {
+            id: AssignmentId(id.into()),
+            module_id: ModuleId(module_id.into()),
+            kind: "drill".into(),
+            file: format!("assignments/{id}.md"),
+            objectives: vec![],
+            status: AssignmentStatus::Graded,
+            input_type: None,
+            options: vec![],
+            language: None,
+            submission_file: None,
+            submitted_at: None,
+            extra: Default::default(),
+        }
+    }
+
+    /// A taught module whose graded drill left an objective short of the gate routes to
+    /// Remediate, carrying exactly the failing objective(s) — not back to CreateAssignment.
+    #[test]
+    fn failed_assessment_routes_to_remediate() {
+        let mut m1 = module("m01", 1, &[], ModuleStatus::InProgress);
+        m1.taught = true;
+        m1.objectives = vec![obj("m01-o1", Some(0.50)), obj("m01-o2", Some(0.95))];
+        let mut man = manifest_with_modules(vec![m1]);
+        man.current.module_id = Some(ModuleId("m01".into()));
+        man.assignments = vec![graded("a01", "m01")];
+        assert_eq!(
+            derive_route(&man, &full_disk()).route,
+            Route::Remediate {
+                module_id: ModuleId("m01".into()),
+                weak_objectives: vec![ObjectiveId("m01-o1".into())], // o2 cleared, excluded
+            }
+        );
+    }
+
+    /// First drill: a taught module with objectives but NO graded assignment yet still routes
+    /// to CreateAssignment (remediation only kicks in AFTER a failed assessment).
+    #[test]
+    fn taught_with_objectives_but_no_graded_routes_to_create_assignment() {
+        let mut m1 = module("m01", 1, &[], ModuleStatus::InProgress);
+        m1.taught = true;
+        m1.objectives = vec![obj("m01-o1", None)];
+        let mut man = manifest_with_modules(vec![m1]);
+        man.current.module_id = Some(ModuleId("m01".into()));
+        assert_eq!(
+            derive_route(&man, &full_disk()).route,
+            Route::CreateAssignment {
+                module_id: ModuleId("m01".into())
+            }
+        );
+    }
+
+    /// Assess-drift guard: a graded module whose objectives all clear the gate but whose
+    /// `status` was not flipped to mastered must NOT remediate (empty weak set).
+    #[test]
+    fn graded_but_gate_clears_does_not_remediate() {
+        let mut m1 = module("m01", 1, &[], ModuleStatus::InProgress);
+        m1.taught = true;
+        m1.objectives = vec![obj("m01-o1", Some(0.95))]; // ≥ 0.90 threshold
+        let mut man = manifest_with_modules(vec![m1]);
+        man.current.module_id = Some(ModuleId("m01".into()));
+        man.assignments = vec![graded("a01", "m01")];
+        assert_eq!(
+            derive_route(&man, &full_disk()).route,
+            Route::CreateAssignment {
+                module_id: ModuleId("m01".into())
+            }
+        );
+    }
+
+    /// B1 boundary: a degenerate 0-objective module (can never clear or fail the gate) keeps
+    /// its pre-existing CreateAssignment behavior — it must NOT enter a remediation loop.
+    #[test]
+    fn zero_objective_module_does_not_remediate() {
+        let mut m1 = module("m01", 1, &[], ModuleStatus::InProgress); // module() => no objectives
+        m1.taught = true;
+        let mut man = manifest_with_modules(vec![m1]);
+        man.current.module_id = Some(ModuleId("m01".into()));
+        man.assignments = vec![graded("a01", "m01")];
+        assert_eq!(
+            derive_route(&man, &full_disk()).route,
+            Route::CreateAssignment {
+                module_id: ModuleId("m01".into())
+            }
+        );
+    }
+
+    /// M4 scope: a graded assignment on an OLD (mastered) module must not make the CURRENT
+    /// freshly-taught module remediate on its first pass.
+    #[test]
+    fn graded_on_other_module_does_not_trigger_remediate() {
+        let mut m1 = module("m01", 1, &[], ModuleStatus::Mastered);
+        m1.taught = true;
+        m1.objectives = vec![obj("m01-o1", Some(0.95))];
+        let mut m2 = module("m02", 2, &["m01"], ModuleStatus::InProgress);
+        m2.taught = true;
+        m2.objectives = vec![obj("m02-o1", None)];
+        let mut man = manifest_with_modules(vec![m1, m2]);
+        man.current.module_id = Some(ModuleId("m02".into()));
+        man.assignments = vec![graded("a01", "m01")]; // graded on m01, not m02
+        assert_eq!(
+            derive_route(&man, &full_disk()).route,
+            Route::CreateAssignment {
+                module_id: ModuleId("m02".into())
+            }
+        );
+    }
+
+    /// Loop-safety at the routing layer: once remediation has emitted a new Open drill, the
+    /// route is CompleteOpenAssignment — it can never re-enter Remediate without a fresh fail.
+    #[test]
+    fn open_drill_after_remediation_routes_to_complete_not_remediate() {
+        let mut m1 = module("m01", 1, &[], ModuleStatus::InProgress);
+        m1.taught = true;
+        m1.objectives = vec![obj("m01-o1", Some(0.50))];
+        let mut man = manifest_with_modules(vec![m1]);
+        man.current.module_id = Some(ModuleId("m01".into()));
+        let mut open = graded("a02", "m01");
+        open.status = AssignmentStatus::Open;
+        man.assignments = vec![graded("a01", "m01"), open];
+        assert_eq!(
+            derive_route(&man, &full_disk()).route,
+            Route::CompleteOpenAssignment {
+                assignment_id: AssignmentId("a02".into())
+            }
+        );
+    }
+
+    #[test]
+    fn gate_failing_objectives_picks_unscored_and_below_threshold() {
+        let mut m1 = module("m01", 1, &[], ModuleStatus::InProgress); // threshold 0.90
+        m1.objectives = vec![
+            obj("m01-o1", Some(0.95)), // clears
+            obj("m01-o2", Some(0.40)), // below
+            obj("m01-o3", None),       // unscored
+        ];
+        assert_eq!(
+            gate_failing_objectives(&m1),
+            vec![ObjectiveId("m01-o2".into()), ObjectiveId("m01-o3".into())]
+        );
+        let empty = module("m09", 1, &[], ModuleStatus::InProgress);
+        assert!(gate_failing_objectives(&empty).is_empty());
     }
 }

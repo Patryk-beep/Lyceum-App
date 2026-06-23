@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useResumeRecorder } from "../hooks/useResumeState";
 import { useManifest } from "../lib/query";
 import { useSessionSubscription } from "../lib/useSession";
+import { useTutorSubscription } from "../lib/useTutor";
 import { useIsBusy } from "../stores/useEngineStore";
+import { useTutorStore } from "../stores/useTutorStore";
 import { useZenStore } from "../stores/useZenStore";
 import { pageLabel, parseSubjectRoute } from "../theme/loop";
 import { AppSidebar } from "./AppSidebar";
@@ -13,6 +15,7 @@ import { CommandPalette } from "./CommandPalette";
 import { SessionDrawer } from "./SessionDrawer";
 import { skillLabel } from "./SkillRunProgress";
 import { SkillRunOverlay } from "./SkillRunOverlay";
+import { TutorPanel } from "./TutorPanel";
 
 const COLLAPSE_KEY = "lyceum-sidebar-collapsed";
 
@@ -20,11 +23,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   useSessionSubscription();
+  useTutorSubscription();
   useResumeRecorder();
 
   const { slug } = parseSubjectRoute(pathname);
   const { data: manifest } = useManifest(slug ?? "");
   const subjectName = manifest?.subject ?? null;
+  const tutorToggle = useTutorStore((s) => s.toggle);
+
+  // What the learner is looking at, passed to the tutor as context. The current lesson file
+  // (so it can read the exact lesson); never an assignment route — that would point the tutor
+  // at a possibly-open brief. The module id is always useful.
+  const moduleId = manifest?.current?.moduleId;
+  const tutorScope = useMemo(() => {
+    const m = pathname.match(/^\/subject\/[^/]+\/lesson\/(.+)$/);
+    return {
+      artifact: m ? `lessons/${decodeURIComponent(m[1])}` : undefined,
+      moduleId,
+    };
+  }, [pathname, moduleId]);
   // While THIS subject's turn runs, bar interaction with its content (the overlay
   // covers it; the content behind is set inert). Other subjects stay usable.
   // useIsBusy handles a null slug (→ false), so call it unconditionally.
@@ -151,6 +168,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <span className="topbar__brand window-chrome__brand">lyceum</span>
         <Breadcrumb pathname={pathname} subjectName={subjectName} />
         <div className="topbar__spacer" />
+        {slug && (
+          <button
+            className="topbar__tutor"
+            onClick={tutorToggle}
+            aria-label="Ask the tutor"
+            title="Ask the tutor"
+          >
+            Ask tutor
+          </button>
+        )}
         <button
           className="topbar__kbd"
           onClick={openPalette}
@@ -190,6 +217,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </main>
         {!zenActive && <SessionDrawer slug={slug} />}
+        {/* Outside `.content__inner` so the tutor stays usable while a skill turn runs. */}
+        {!zenActive && <TutorPanel slug={slug} scope={tutorScope} />}
       </div>
 
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />

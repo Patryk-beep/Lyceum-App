@@ -34,11 +34,46 @@ pub fn prompt_for(route: &Route, slug: &str) -> Option<String> {
              is complete, output the line {DONE_SENTINEL} and nothing after it."
         ));
     }
+    // Remediation needs a bespoke prompt: it names the failed module's still-short
+    // objectives and pins the loop-safety contract (re-teach differently + emit exactly ONE
+    // new open drill covering ALL of them, so the next route is the learner's drill, not
+    // another remediation). The generic "run lyceum:<skill>" body does not carry that.
+    if let Route::Remediate {
+        module_id,
+        weak_objectives,
+    } = route
+    {
+        let objs = if weak_objectives.is_empty() {
+            "the module's objectives".to_string()
+        } else {
+            weak_objectives
+                .iter()
+                .map(|o| o.0.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        return Some(format!(
+            "You are operating the Lyceum learning system over the workspace folder \
+             `learning/{slug}/`. FIRST read `learning/{slug}/manifest.json` — it is the single \
+             source of truth (see references/MANIFEST.md). The learner's most recent assessment \
+             of module {module_id} did NOT clear the mastery gate. Run the `lyceum:remediate` \
+             skill for module {module_id}, targeting these still-short objectives: {objs}. \
+             Re-teach them a DIFFERENT way than the original lesson (a new representation, fresh \
+             worked examples, smaller steps — never a copy of the first lesson), then create \
+             exactly ONE new targeted practice assignment (status `open`) whose `objectives` \
+             cover ALL of those objectives so the next assessment can score them. Follow the \
+             MANIFEST.md contract exactly; `objective.mastery` and `module.status` stay \
+             READ-ONLY here (only assess-understanding writes them). Do not ask the user any \
+             questions. When the step is fully complete, output the line {DONE_SENTINEL} and \
+             nothing after it."
+        ));
+    }
     let (skill, focus) = match route {
         Route::Research => ("research-topic", String::new()),
         // Unreachable in practice (handled by the early return above) but kept so the
         // match stays exhaustive without a wildcard that would swallow new variants.
         Route::Placement => ("placement-test", String::new()),
+        Route::Remediate { .. } => ("remediate", String::new()),
         Route::BuildCurriculum => ("build-curriculum", String::new()),
         Route::Teach { module_id } => ("teach-lesson", format!(" for module {module_id}")),
         Route::CreateAssignment { module_id } => {
@@ -95,5 +130,24 @@ mod tests {
             "x"
         )
         .is_none());
+    }
+
+    #[test]
+    fn remediate_route_names_skill_module_and_weak_objectives() {
+        use lyceum_core::model::ObjectiveId;
+        let p = prompt_for(
+            &Route::Remediate {
+                module_id: ModuleId("m02".into()),
+                weak_objectives: vec![ObjectiveId("m02-o1".into()), ObjectiveId("m02-o3".into())],
+            },
+            "spanish",
+        )
+        .unwrap();
+        assert!(p.contains("lyceum:remediate"));
+        assert!(p.contains("module m02"));
+        assert!(p.contains("m02-o1") && p.contains("m02-o3"));
+        assert!(p.contains("exactly ONE")); // loop-safety: one new open drill
+        assert!(p.contains("learning/spanish/"));
+        assert!(p.contains(DONE_SENTINEL));
     }
 }

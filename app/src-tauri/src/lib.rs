@@ -9,6 +9,7 @@ mod prompts;
 mod service;
 mod state;
 mod submit;
+mod tutor;
 mod workspace;
 
 use std::path::PathBuf;
@@ -77,6 +78,8 @@ pub fn run() {
                 model: MODEL.to_string(),
                 sessions: Default::default(),
                 turn_slots: Arc::new(Semaphore::new(state::MAX_CONCURRENT_TURNS)),
+                tutor_sessions: Default::default(),
+                tutor_slots: Arc::new(Semaphore::new(state::MAX_CONCURRENT_TUTOR)),
             });
             Ok(())
         })
@@ -107,6 +110,9 @@ pub fn run() {
             engine_cmds::create_subject,
             engine_cmds::delete_subject,
             engine_cmds::reset_curriculum,
+            tutor::ask_tutor,
+            tutor::read_tutor_thread,
+            tutor::clear_tutor_thread,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

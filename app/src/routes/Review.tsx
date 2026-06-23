@@ -8,7 +8,25 @@ import { api } from "../lib/ipc";
 import { useReviewDue, useSubjects } from "../lib/query";
 import type { ReviewCandidate, ReviewGrade } from "../lib/types";
 
-/** Presentational review queue — steps through the due cards. */
+// Deterministic confetti burst (no Math.random — stable in tests/SSR). Colours ride
+// the theme tokens so each variant celebrates in its own palette.
+const CONFETTI_COLORS = [
+  "var(--gold)",
+  "var(--amber, var(--gold))",
+  "var(--stage-research)",
+  "var(--stage-assign)",
+  "var(--stage-capstone)",
+];
+const CONFETTI = Array.from({ length: 14 }, (_, i) => ({
+  left: `${(i * 13 + 6) % 96}%`,
+  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  dur: `${1.2 + (i % 4) * 0.2}s`,
+  delay: `${(i % 5) * 0.08}s`,
+}));
+
+/** Presentational review queue — steps through the due cards, tracking an in-session
+ *  "combo" (consecutive recalled cards). The combo and the completion celebration are
+ *  purely ephemeral — no XP, no persistence. */
 export function ReviewView({
   slug,
   cards,
@@ -19,6 +37,7 @@ export function ReviewView({
   onGrade: (slug: string, itemId: string, grade: ReviewGrade) => void;
 }) {
   const [index, setIndex] = useState(0);
+  const [combo, setCombo] = useState(0);
 
   if (cards.length === 0) {
     return (
@@ -34,23 +53,48 @@ export function ReviewView({
 
   if (done) {
     return (
-      <div className="card empty-state" data-testid="review-done">
-        <div className="empty-state__title">Review complete</div>
-        <p>You worked through {cards.length} card(s).</p>
+      <div className="card empty-state review-done" data-testid="review-done">
+        <div className="review-confetti" aria-hidden="true">
+          {CONFETTI.map((c, i) => (
+            <span
+              key={i}
+              style={{
+                left: c.left,
+                background: c.color,
+                animationDuration: c.dur,
+                animationDelay: c.delay,
+              }}
+            />
+          ))}
+        </div>
+        <div className="empty-state__title">Session complete!</div>
+        <div className="review-done__count metric">{cards.length}</div>
+        <p>card{cards.length === 1 ? "" : "s"} cleared — spacing locked in.</p>
       </div>
     );
   }
 
   return (
     <div className="review-screen" data-testid="review-screen">
-      <div className="dashboard__section-title">
-        Spaced review — {index + 1} / {cards.length}
+      <div className="review-screen__topline">
+        <div className="dashboard__section-title">
+          Spaced review — {index + 1} / {cards.length}
+        </div>
+        {combo >= 2 && (
+          <span className="review-combo" data-testid="review-combo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2c2.4 3.4 4.8 5.6 4.8 9A4.8 4.8 0 0 1 7.2 11c0-1 .3-1.9.9-2.7.4 1.1 1.1 1.7 1.9 1.8C11 8.4 10 6 12 2z" />
+            </svg>
+            {combo} in a row
+          </span>
+        )}
       </div>
       <ReviewCard
         key={card.itemId}
         card={card}
         onGrade={(grade) => {
           onGrade(slug, card.itemId, grade);
+          setCombo((c) => (grade === "again" ? 0 : c + 1));
           setIndex((i) => i + 1);
         }}
       />

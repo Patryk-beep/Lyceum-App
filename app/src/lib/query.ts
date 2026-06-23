@@ -36,6 +36,17 @@ export function useManifest(slug: string) {
   });
 }
 
+/** The authoritative next routed step (kind/why/target) from the Rust router. Advisory in
+ *  the UI — `run_subject_step` re-derives the route at run time — so consumers must treat it
+ *  as best-effort (refetch after a run; tolerate loading/error). */
+export function useNextStep(slug: string) {
+  return useQuery({
+    queryKey: ["nextStep", slug],
+    queryFn: () => api.computeNextStep(slug),
+    enabled: !!slug,
+  });
+}
+
 export function useReviewDue(slug: string) {
   return useQuery({
     queryKey: ["review", slug],

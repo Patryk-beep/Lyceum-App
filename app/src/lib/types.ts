@@ -173,6 +173,31 @@ export interface SessionEnvelope {
   event: BridgeEvent;
 }
 
+// --- Tutor (read-only in-context Q&A; streams on the `claude://tutor` channel) ---
+
+export interface TutorMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
+/** The app-owned visible Q&A transcript (`tutor-thread.json`). */
+export interface TutorThread {
+  turns: TutorMessage[];
+}
+
+/** What the learner is currently viewing — passed to `ask_tutor` so the tutor answers about
+ *  the specific thing they're working on (always also has the full research). */
+export interface TutorScope {
+  artifact?: string;
+  moduleId?: string;
+}
+
+/** Mirrors the Rust `TutorEnvelope` — a `BridgeEvent` on the dedicated tutor channel. */
+export interface TutorEnvelope {
+  slug: string;
+  event: BridgeEvent;
+}
+
 // --- Partial manifest shape (enough for views; full type arrives with ts-rs). ---
 
 export interface Objective {

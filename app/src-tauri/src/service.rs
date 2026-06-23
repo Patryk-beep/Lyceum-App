@@ -39,6 +39,7 @@ fn route_dto(route: Route, why: String) -> RouteDto {
         Route::BuildCurriculum => ("buildCurriculum", None),
         Route::Teach { module_id } => ("teach", Some(module_id.0)),
         Route::CreateAssignment { module_id } => ("createAssignment", Some(module_id.0)),
+        Route::Remediate { module_id, .. } => ("remediate", Some(module_id.0)),
         Route::CompleteOpenAssignment { assignment_id } => {
             ("completeAssignment", Some(assignment_id.0))
         }

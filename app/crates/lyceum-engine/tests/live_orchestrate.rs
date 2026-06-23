@@ -40,6 +40,7 @@ async fn live_orchestrated_write_reloads_and_validates() {
         plugin_dir: staged,
         model: "claude-opus-4-8".into(),
         resume: None,
+        read_only: false,
     };
 
     let manifest_json = r#"{"subject":"Live Test","slug":"live-test","created":"2026-06-18","updated":"2026-06-18","scale":{"start":1,"target":2},"current":{"level":1,"moduleId":"m01","phase":"teach","status":"in-progress"},"modules":[{"id":"m01","title":"Basics","level":1,"prereqs":[],"status":"in-progress","taught":false,"masteryThreshold":0.9,"objectives":[{"id":"m01-o1","text":"o1"}]}],"assignments":[],"reviewQueue":[],"certification":null,"history":[],"settings":{"scheduler":"leitner","retentionTarget":0.9,"sessionLengthMin":30,"htmlTheme":"night"}}"#;

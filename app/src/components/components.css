@@ -489,6 +489,136 @@
 .roadmap__header {
   margin-bottom: 18px;
 }
+/* Remediation notice — shown above the run button when the next step re-teaches a failed
+   module. Calm, encouraging; uses the teach-stage accent (remediation is a re-teach). */
+.remediation-notice {
+  border-left: 3px solid var(--stage-teach);
+  margin-bottom: 14px;
+}
+.remediation-notice__title {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.remediation-notice__body {
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.remediation-notice__list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text);
+}
+.remediation-notice__list li {
+  margin: 2px 0;
+}
+
+/* Tutor — read-only in-context Q&A panel (right rail, above the session drawer). */
+.topbar__tutor {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+.topbar__tutor:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.tutor-panel {
+  position: fixed;
+  top: var(--topbar-h);
+  right: 0;
+  bottom: 0;
+  width: min(420px, 94vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  z-index: 50;
+}
+.tutor-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.tutor-panel__title {
+  font-weight: 600;
+  color: var(--text);
+}
+.tutor-panel__spacer {
+  flex: 1;
+}
+.tutor-panel__btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.tutor-panel__btn:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+.tutor-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tutor-panel__empty {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.tutor-msg {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.tutor-msg--user {
+  align-self: flex-end;
+  max-width: 85%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+}
+.tutor-msg__user {
+  margin: 0;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.tutor-msg--assistant {
+  color: var(--text);
+}
+.tutor-msg--assistant > :first-child {
+  margin-top: 0;
+}
+.tutor-panel__input {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+.tutor-panel__field {
+  flex: 1;
+  resize: none;
+}
+.tutor-panel__send {
+  white-space: nowrap;
+}
 .roadmap__header h1 {
   font-size: 28px;
 }
@@ -924,6 +1054,21 @@
   font-size: 13px;
   color: var(--muted);
   margin-top: 4px;
+}
+/* Week-dots: trailing min(days,7) of 7 lit. Amber where defined, else the accent. */
+.streak-card__dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+}
+.streak-card__dot {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--panel-3);
+}
+.streak-card__dot--on {
+  background: var(--amber, var(--gold));
 }
 
 /* ---- Dashboard cover (empty state) ---- */
@@ -1866,5 +2011,71 @@
   }
   50% {
     opacity: 0.35;
+  }
+}
+
+/* ---- Review gamification (in-session, no persistence) ---- */
+.review-screen__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.review-combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--amber, var(--gold));
+  animation: pop 0.3s ease;
+}
+.review-done {
+  position: relative;
+  overflow: hidden;
+}
+.review-done__count {
+  font-family: var(--font-serif);
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--amber, var(--gold));
+  margin-top: 6px;
+}
+.review-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.review-confetti span {
+  position: absolute;
+  top: -14px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confetti 1.5s ease-in forwards;
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes confetti {
+  0% {
+    transform: translateY(-14px) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(260px) rotate(540deg);
+    opacity: 0;
   }
 }
