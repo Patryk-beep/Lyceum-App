@@ -60,12 +60,18 @@ export function NotebookAssist({
         </div>
       )}
 
-      {assist.isPending && <p className="muted notebook__assist-status">Thinking…</p>}
-      {assist.isError && (
-        <p className="notebook__assist-status" style={{ color: "var(--danger)" }}>
-          Assist failed: {String(assist.error)}
-        </p>
-      )}
+      <div
+        role="status"
+        aria-live="polite"
+        className="notebook__assist-status"
+        style={assist.isError ? { color: "var(--danger)" } : undefined}
+      >
+        {assist.isPending
+          ? "Thinking…"
+          : assist.isError
+            ? `Assist failed: ${String(assist.error)}`
+            : ""}
+      </div>
 
       {result !== null && (
         <div className="notebook__assist-result" data-testid="assist-result">
