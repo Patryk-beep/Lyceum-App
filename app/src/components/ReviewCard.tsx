@@ -46,6 +46,7 @@ export function ReviewCard({
               <button
                 key={g.key}
                 className="btn btn--outline review-card__grade"
+                data-grade={g.key}
                 onClick={() => onGrade(g.key)}
               >
                 {g.label}

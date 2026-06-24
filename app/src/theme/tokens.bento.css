@@ -30,6 +30,7 @@
   --gold-line: rgba(108, 92, 231, 0.32);
   --gold-press: #5b4bd0;
   --on-accent: #ffffff;
+  --iris-text: #5b4bd0; /* accent as text — AA on light canvas (5.19) + on iris-100 (5.12) */
 
   /* Amber spark (secondary) — highlights, "today"/new accents */
   --amber: #ffd166;
@@ -149,4 +150,43 @@
   background: var(--danger);
   color: var(--on-coral);
   border: none;
+}
+
+/* ---- P3 · Learning surfaces: grade buttons + verdict chips -----------------------
+   Each SRS grade gets a Bento hue (filled tint, no outline). Every bg/fg pair is AA:
+   Again 4.84 · Hard 13.3 · Good 4.78 · Easy 5.12. (review-card band/left-border are
+   already teal via --stage-review, so they need no override.) */
+:root[data-theme^="bento"] .review-card__grade {
+  border-color: transparent;
+}
+:root[data-theme^="bento"] .review-card__grade[data-grade="again"] {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}
+:root[data-theme^="bento"] .review-card__grade[data-grade="hard"] {
+  background: var(--panel-2);
+  color: var(--text);
+}
+:root[data-theme^="bento"] .review-card__grade[data-grade="good"] {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+:root[data-theme^="bento"] .review-card__grade[data-grade="easy"] {
+  background: var(--iris-100);
+  color: var(--iris-text);
+}
+
+/* Placement verdict chips: filled semantic tints with darkened/ink text (the global 16%
+   color-mix + raw accent fg fail AA on Bento's palette). */
+:root[data-theme^="bento"] .pfeedback__chip.is-correct {
+  color: var(--success-fg);
+  background: var(--success-bg);
+}
+:root[data-theme^="bento"] .pfeedback__chip.is-partial {
+  color: var(--text);
+  background: var(--amber-soft);
+}
+:root[data-theme^="bento"] .pfeedback__chip.is-incorrect {
+  color: var(--danger-fg);
+  background: var(--danger-bg);
 }
