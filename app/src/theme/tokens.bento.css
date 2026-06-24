@@ -97,7 +97,35 @@
 }
 
 /* Primary button: iris fill (via --gold) with white/ink label via --on-accent — replaces
-   the global rule's hardcoded #1a1505 ink, which is low-contrast on iris. */
+   the global rule's hardcoded #1a1505 ink, which is low-contrast on iris. Bento primary is a
+   14px-radius rectangle (pills are reserved for nav/inline actions) and lifts on hover. */
+:root[data-theme^="bento"] .btn {
+  transition: transform 0.2s ease, filter 0.15s ease, background 0.15s ease,
+    border-color 0.15s ease;
+}
 :root[data-theme^="bento"] .btn--primary {
   color: var(--on-accent);
+  border-radius: var(--radius-sm);
+}
+:root[data-theme^="bento"] .btn--primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Subject cards lift on hover — springy, flat (depth from motion, not heavy shadow). */
+:root[data-theme^="bento"] .subject-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+:root[data-theme^="bento"] .subject-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Reduced motion: the global guard already kills transition durations; also drop the
+   hover-lift transforms entirely so nothing shifts position. */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme^="bento"] .btn--primary:hover:not(:disabled),
+  :root[data-theme^="bento"] .subject-card:hover {
+    transform: none;
+  }
 }
