@@ -15,10 +15,16 @@ const EMPTY: TutorSlugState = { messages: [], streaming: "", busy: false };
 interface TutorStore {
   /** Panel visibility (app-global; the panel itself is per-current-subject). */
   open: boolean;
+  /** A question to pre-fill the input with on the next open (e.g. "explain this
+   *  selection"). The panel consumes it into its draft, then clears it. */
+  seed: string;
   threads: Record<string, TutorSlugState>;
   openPanel: () => void;
   closePanel: () => void;
   toggle: () => void;
+  /** Open the panel with the input pre-filled (not sent — the learner edits/sends). */
+  openWith: (question: string) => void;
+  clearSeed: () => void;
   /** Optimistically record the learner's question and mark the thread busy. */
   ask: (slug: string, question: string) => void;
   /** Reduce a streamed tutor `BridgeEvent` into the thread. */
@@ -40,10 +46,13 @@ const put = (
 
 export const useTutorStore = create<TutorStore>((set) => ({
   open: false,
+  seed: "",
   threads: {},
   openPanel: () => set({ open: true }),
   closePanel: () => set({ open: false }),
   toggle: () => set((s) => ({ open: !s.open })),
+  openWith: (question) => set({ open: true, seed: question }),
+  clearSeed: () => set({ seed: "" }),
 
   ask: (slug, question) =>
     set((s) => {

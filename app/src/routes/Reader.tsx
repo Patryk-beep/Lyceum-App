@@ -1,8 +1,11 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { ArtifactView } from "../components/ArtifactView";
 import { ConfirmDestructive } from "../components/ConfirmDestructive";
+import { LessonRail } from "../components/LessonRail";
+import { api } from "../lib/ipc";
 import { useDeleteLesson, useLessons, useNotebooks } from "../lib/query";
 
 /** Backlinks: notes anchored to this lesson's module + a quick "add note" that
@@ -63,26 +66,40 @@ export function Lesson() {
   const moduleId = row?.moduleId ?? null;
   const mastered = row?.moduleStatus === "mastered";
 
-  return (
-    <div className="reader-screen">
-      <div className="reader__header">
-        <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 20 }}>Lesson</h1>
-        <button
-          className="btn btn--ghost"
-          style={{ color: "var(--danger)" }}
-          onClick={() => setConfirming(true)}
-        >
-          Delete lesson
-        </button>
-      </div>
-      {del.isError && (
-        <div className="muted" style={{ color: "var(--danger)", marginBottom: 10 }}>
-          Could not delete: {String(del.error)}
-        </div>
-      )}
-      <ArtifactView slug={slug} relpath={`lessons/${file}`} title="Lesson" />
+  const relpath = `lessons/${file}`;
+  // Same query key as ArtifactView → served from cache, no extra fetch. The rail
+  // builds the "On this page" outline + gates the check-jump action from this text.
+  const { data: markdown } = useQuery({
+    queryKey: ["artifact", slug, relpath],
+    queryFn: () => api.readArtifact(slug, relpath),
+    retry: false,
+    enabled: !!slug,
+  });
 
-      <LessonNotes slug={slug} moduleId={moduleId} />
+  return (
+    <div className="lesson-layout">
+      <div className="reader-screen">
+        <div className="reader__header">
+          <h1 style={{ fontFamily: "var(--font-serif)", fontSize: 20 }}>Lesson</h1>
+          <button
+            className="btn btn--ghost"
+            style={{ color: "var(--danger)" }}
+            onClick={() => setConfirming(true)}
+          >
+            Delete lesson
+          </button>
+        </div>
+        {del.isError && (
+          <div className="muted" style={{ color: "var(--danger)", marginBottom: 10 }}>
+            Could not delete: {String(del.error)}
+          </div>
+        )}
+        <ArtifactView slug={slug} relpath={relpath} title="Lesson" />
+
+        <LessonNotes slug={slug} moduleId={moduleId} />
+      </div>
+
+      <LessonRail slug={slug} moduleId={moduleId} markdown={markdown ?? ""} />
 
       {confirming && (
         <ConfirmDestructive

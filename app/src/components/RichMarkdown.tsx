@@ -1,12 +1,27 @@
-import { useMemo } from "react";
+import { isValidElement, useMemo, type ReactNode } from "react";
 import Markdown, { type Components, type Options } from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 
+import { slugify } from "../lib/slug";
 import { LessonImg } from "./LessonImg";
 import { MermaidDiagram } from "./MermaidDiagram";
+
+/** Flatten a heading's children to plain text so we can stamp a stable id on it
+ *  (the lesson outline links to the same `slugify(text)`). */
+function headingText(children: ReactNode): string {
+  let s = "";
+  const walk = (n: ReactNode) => {
+    if (n == null || typeof n === "boolean") return;
+    if (typeof n === "string" || typeof n === "number") s += n;
+    else if (Array.isArray(n)) n.forEach(walk);
+    else if (isValidElement(n)) walk((n.props as { children?: ReactNode }).children);
+  };
+  walk(children);
+  return s;
+}
 
 // The single configured markdown renderer, shared by every render site (artifacts,
 // placement feedback, submission preview, placement stems). Channels — all offline, all
@@ -29,6 +44,10 @@ export function RichMarkdown({ children, slug }: { children: string; slug?: stri
   // `slug`. Memoize on slug so the components map is stable between renders.
   const components = useMemo<Components>(
     () => ({
+      // Stamp ids so the lesson rail's "On this page" outline can scroll to a section.
+      h1: ({ children }) => <h1 id={slugify(headingText(children))}>{children}</h1>,
+      h2: ({ children }) => <h2 id={slugify(headingText(children))}>{children}</h2>,
+      h3: ({ children }) => <h3 id={slugify(headingText(children))}>{children}</h3>,
       code({ className, children }) {
         // v9 dropped the `inline` prop: a block is identified by a `language-` class.
         if (/\blanguage-mermaid\b/.test(className ?? "")) {

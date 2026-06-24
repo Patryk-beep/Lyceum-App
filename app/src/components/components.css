@@ -836,6 +836,9 @@
 /* ---- Reader (markdown) ---- */
 .reader-screen {
   max-width: 720px;
+  /* Center the reading column so a wide window doesn't leave it stranded against
+     the left with dead space on the right (the rail, when present, sits beside it). */
+  margin-inline: auto;
 }
 .reader {
   font-family: var(--font-serif);
@@ -848,6 +851,8 @@
 .reader h3 {
   font-family: var(--font-serif);
   margin: 1.2em 0 0.4em;
+  /* Clear the sticky topbar when the lesson rail scrolls a section into view. */
+  scroll-margin-top: calc(var(--topbar-h) + 16px);
 }
 .reader code {
   font-family: ui-monospace, monospace;
@@ -2347,4 +2352,199 @@
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+/* ---- Lesson layout: centered reading column + study companion rail ---- */
+.lesson-layout {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+.lesson-layout .reader-screen {
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* The right rail sticks beside the lesson while the column scrolls under it. */
+.lesson-rail {
+  flex: 0 0 var(--lesson-rail-w, 360px);
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: calc(100vh - var(--topbar-h) - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.lesson-rail--notebook {
+  --lesson-rail-w: 460px;
+}
+.lesson-rail--collapsed {
+  flex-basis: auto;
+  background: transparent;
+  border: none;
+  overflow: visible;
+}
+.lesson-rail__reopen {
+  font: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+}
+.lesson-rail__reopen:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+.lesson-rail__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.lesson-rail__tabs {
+  display: inline-flex;
+  gap: 4px;
+  flex: 1;
+}
+.lesson-rail__tab {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.lesson-rail__tab.is-on {
+  color: var(--text);
+  border-color: var(--gold);
+  background: var(--gold-soft);
+}
+.lesson-rail__collapse {
+  font: inherit;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.lesson-rail__collapse:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+.lesson-rail__body {
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* "On this page" outline — a quiet vertical list with an indent per heading level. */
+.lesson-outline__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.lesson-outline__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.4;
+  padding: 5px 8px;
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lesson-outline__item:hover {
+  background: var(--panel-2);
+  color: var(--text);
+  border-left-color: var(--line-strong);
+}
+.lesson-outline__item--h1 {
+  font-weight: 600;
+  color: var(--text);
+}
+.lesson-outline__item--h3 {
+  padding-left: 20px;
+  font-size: 13px;
+}
+.lesson-outline__empty {
+  font-size: 13px;
+  padding: 4px 2px;
+  margin: 0;
+}
+
+/* Study quick-actions under the outline. */
+.lesson-rail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lesson-rail__actions-label {
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0;
+}
+.lesson-rail__action {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  font-size: 13px;
+}
+.lesson-rail__flash {
+  font-size: 12px;
+  color: var(--gold);
+  margin: 2px 0 0;
+}
+
+/* Notebook docked in the rail: reuse the full notebook, stacked to one column. */
+.lesson-rail__notebook {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px;
+  display: flex;
+}
+.lesson-rail__notebook .notebook__head h1 {
+  font-size: 18px;
+}
+.lesson-rail__notebook .notebook__panes {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.lesson-rail__notebook .notebook__list {
+  max-height: 26vh;
+}
+
+/* The rail targets the wide windows where the dead space appears; below this the
+   lesson reverts to a single centered column and the full Notebook route is used. */
+@media (max-width: 1240px) {
+  .lesson-layout {
+    display: block;
+  }
+  .lesson-rail {
+    display: none;
+  }
 }

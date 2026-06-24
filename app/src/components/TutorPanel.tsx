@@ -17,9 +17,20 @@ export function TutorPanel({ slug, scope }: { slug: string | null; scope: TutorS
   const fail = useTutorStore((s) => s.fail);
   const loadThread = useTutorStore((s) => s.loadThread);
   const reset = useTutorStore((s) => s.reset);
+  const seed = useTutorStore((s) => s.seed);
+  const clearSeed = useTutorStore((s) => s.clearSeed);
   const { messages, streaming, busy } = useTutorThread(slug);
   const [draft, setDraft] = useState("");
   const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Pre-fill the input when opened with a seed (e.g. "explain this selection"),
+  // then clear the seed so it doesn't re-apply on the next open.
+  useEffect(() => {
+    if (open && seed) {
+      setDraft(seed);
+      clearSeed();
+    }
+  }, [open, seed, clearSeed]);
 
   // Seed scrollback from the saved thread when the panel opens for a subject.
   useEffect(() => {
