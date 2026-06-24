@@ -2303,3 +2303,15 @@
 .lesson-notes__title {
   font-weight: 600;
 }
+.notebook__head-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.notebook__review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}

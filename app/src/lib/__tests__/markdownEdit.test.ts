@@ -32,4 +32,9 @@ describe("insertMarkdown", () => {
     const r = insertMarkdown("docs", 0, 4, "link");
     expect(r.content).toBe("[docs](url)");
   });
+
+  it("wraps a selection as a cloze flashcard", () => {
+    const r = insertMarkdown("capital is Paris", 11, 16, "cloze");
+    expect(r.content).toBe("capital is ==Paris==");
+  });
 });

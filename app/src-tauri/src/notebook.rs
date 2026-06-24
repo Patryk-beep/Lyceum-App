@@ -224,6 +224,7 @@ pub fn create_notebook(
         tags: Vec::new(),
     };
     write_note(ws, slug, &id, content, &meta)?;
+    crate::notebook_cards::reconcile_cards(ws, slug, &id, content, module_id, today)?;
     Ok(into_entry(id, meta, content.to_string()))
 }
 
@@ -246,6 +247,14 @@ pub fn update_notebook(
     meta.title = title.to_string();
     meta.updated_at = today;
     write_note(ws, slug, id, content, &meta)?;
+    crate::notebook_cards::reconcile_cards(
+        ws,
+        slug,
+        id,
+        content,
+        meta.module_id.as_deref(),
+        today,
+    )?;
     Ok(into_entry(id.to_string(), meta, content.to_string()))
 }
 
@@ -255,6 +264,7 @@ pub fn delete_notebook(ws: &Path, slug: &str, id: &str) -> AppResult<()> {
     validate_notebook_id(id)?;
     remove_idempotent(&note_path(ws, slug, id, "md")?)?;
     remove_idempotent(&note_path(ws, slug, id, "json")?)?;
+    crate::notebook_cards::prune_cards(ws, slug, id)?;
     Ok(())
 }
 

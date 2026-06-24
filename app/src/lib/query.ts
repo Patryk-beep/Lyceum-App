@@ -147,7 +147,8 @@ export function useNotebooks(slug: string) {
   });
 }
 
-/** Create (no `id`) or update (with `id`) a note, then refresh the notebook list. */
+/** Create (no `id`) or update (with `id`) a note, then refresh the notebook list +
+ *  the derived flashcard badge (a cloze edit changes due cards). */
 export function useSaveNotebook(slug: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -162,6 +163,7 @@ export function useSaveNotebook(slug: string) {
         : api.createNotebook(slug, v.title, v.content, v.moduleId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notebook", slug] });
+      qc.invalidateQueries({ queryKey: ["notebookDueCount", slug] });
     },
   });
 }
@@ -172,7 +174,27 @@ export function useDeleteNotebook(slug: string) {
     mutationFn: (id: string) => api.deleteNotebook(slug, id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notebook", slug] });
+      qc.invalidateQueries({ queryKey: ["notebookDueCount", slug] });
     },
+  });
+}
+
+/** Due flashcard batch for the in-session review queue (loaded once per session;
+ *  grading steps through it in memory, so this is NOT invalidated on grade). */
+export function useNotebookCardsDue(slug: string) {
+  return useQuery({
+    queryKey: ["notebookCards", slug],
+    queryFn: () => api.notebookReviewDue(slug),
+    enabled: !!slug,
+  });
+}
+
+/** The "N due" flashcard badge (whole store count). */
+export function useNotebookDueCount(slug: string) {
+  return useQuery({
+    queryKey: ["notebookDueCount", slug],
+    queryFn: () => api.notebookDueCount(slug),
+    enabled: !!slug,
   });
 }
 

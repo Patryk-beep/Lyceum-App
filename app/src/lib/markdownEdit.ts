@@ -7,13 +7,16 @@ export type MdKind =
   | "ol"
   | "check"
   | "quote"
-  | "link";
+  | "link"
+  | "cloze";
 
 const WRAP: Partial<Record<MdKind, [string, string]>> = {
   bold: ["**", "**"],
   italic: ["_", "_"],
   code: ["`", "`"],
   link: ["[", "](url)"],
+  // A flashcard cloze: ==answer== becomes a spaced-repetition card (see notebook_cards.rs).
+  cloze: ["==", "=="],
 };
 
 const LINE: Partial<Record<MdKind, string>> = {

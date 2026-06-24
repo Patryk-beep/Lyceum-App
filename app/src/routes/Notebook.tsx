@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
+import { NotebookReview } from "../components/NotebookReview";
 import { RichMarkdown } from "../components/RichMarkdown";
 import { insertMarkdown, type MdKind } from "../lib/markdownEdit";
 import { searchNotes, type NoteHit } from "../lib/notebookSearch";
 import {
   useDeleteNotebook,
+  useNotebookDueCount,
   useNotebooks,
   useSaveNotebook,
   useSubjects,
@@ -49,6 +51,7 @@ const TOOLS: { kind: MdKind; label: string; title: string }[] = [
   { kind: "check", label: "☑", title: "Checklist" },
   { kind: "quote", label: "❝", title: "Quote" },
   { kind: "link", label: "🔗", title: "Link" },
+  { kind: "cloze", label: "🃏", title: "Make flashcard (==cloze==)" },
 ];
 
 function Toolbar({ onInsert }: { onInsert: (k: MdKind) => void }) {
@@ -270,11 +273,13 @@ export function Notebook() {
   const noteParam = searchParams.get("note") ?? undefined;
 
   const { data: notes, isLoading } = useNotebooks(slug);
+  const { data: dueCount = 0 } = useNotebookDueCount(slug);
   const save = useSaveNotebook(slug);
   const del = useDeleteNotebook(slug);
 
   const [draft, setDraft] = useState<Draft>(() => emptyDraft(moduleParam));
   const [preview, setPreview] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
   const [query, setQuery] = useState("");
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   // A selection to apply to the textarea after the next content render (toolbar
@@ -376,49 +381,64 @@ export function Notebook() {
     <div className="notebook" data-testid="notebook">
       <header className="notebook__head">
         <h1>Notebook</h1>
-        {showPicker && (
-          <select
-            className="wizard__input notebook__subject"
-            value={slug}
-            onChange={(e) => setPicked(e.target.value)}
-            data-testid="notebook-subject-picker"
-            aria-label="Subject"
-          >
-            {subjects!.map((s) => (
-              <option key={s.slug} value={s.slug}>
-                {s.subject}
-              </option>
-            ))}
-          </select>
-        )}
+        <div className="notebook__head-tools">
+          {dueCount > 0 && !reviewing && (
+            <button
+              className="btn btn--primary notebook__review-btn"
+              onClick={() => setReviewing(true)}
+              data-testid="notebook-review-start"
+            >
+              Review {dueCount} card{dueCount === 1 ? "" : "s"}
+            </button>
+          )}
+          {showPicker && (
+            <select
+              className="wizard__input notebook__subject"
+              value={slug}
+              onChange={(e) => setPicked(e.target.value)}
+              data-testid="notebook-subject-picker"
+              aria-label="Subject"
+            >
+              {subjects!.map((s) => (
+                <option key={s.slug} value={s.slug}>
+                  {s.subject}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       </header>
 
-      <div className="notebook__panes">
-        {isLoading ? (
-          <p className="muted">Loading notes…</p>
-        ) : (
-          <NoteList
-            hits={hits}
-            activeId={draft.id}
-            query={query}
-            onQuery={setQuery}
-            onPick={pick}
-            onNew={newNote}
+      {reviewing ? (
+        <NotebookReview slug={slug} onExit={() => setReviewing(false)} />
+      ) : (
+        <div className="notebook__panes">
+          {isLoading ? (
+            <p className="muted">Loading notes…</p>
+          ) : (
+            <NoteList
+              hits={hits}
+              activeId={draft.id}
+              query={query}
+              onQuery={setQuery}
+              onPick={pick}
+              onNew={newNote}
+            />
+          )}
+          <Editor
+            slug={slug}
+            draft={draft}
+            saving={save.isPending}
+            preview={preview}
+            setPreview={setPreview}
+            bodyRef={bodyRef}
+            onChange={change}
+            onBlurSave={persist}
+            onInsert={insert}
+            onDelete={remove}
           />
-        )}
-        <Editor
-          slug={slug}
-          draft={draft}
-          saving={save.isPending}
-          preview={preview}
-          setPreview={setPreview}
-          bodyRef={bodyRef}
-          onChange={change}
-          onBlurSave={persist}
-          onInsert={insert}
-          onDelete={remove}
-        />
-      </div>
+        </div>
+      )}
     </div>
   );
 }

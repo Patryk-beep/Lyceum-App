@@ -239,3 +239,43 @@ pub fn update_notebook(
 pub fn delete_notebook(state: State<AppState>, slug: String, id: String) -> AppResult<()> {
     crate::notebook::delete_notebook(&state.workspace, &slug, &id)
 }
+
+// --- Notebook flashcards (separate SRS store; manifest.review_queue untouched) --
+
+/// Due flashcards for a subject's notes. `moduleId` scopes to one lesson; omit for all.
+#[tauri::command]
+pub fn notebook_review_due(
+    state: State<AppState>,
+    slug: String,
+    module_id: Option<String>,
+) -> AppResult<Vec<crate::notebook_cards::CardCandidate>> {
+    crate::notebook_cards::cards_due(
+        &state.workspace,
+        &slug,
+        module_id.as_deref(),
+        workspace::today(),
+    )
+}
+
+/// Total due-card count for the "N due" badge (whole store, not the capped batch).
+#[tauri::command]
+pub fn notebook_due_count(state: State<AppState>, slug: String) -> AppResult<usize> {
+    crate::notebook_cards::cards_due_count(&state.workspace, &slug, workspace::today())
+}
+
+/// Grade a flashcard (schedule-only); returns the remaining due batch.
+#[tauri::command]
+pub fn notebook_review_grade(
+    state: State<AppState>,
+    slug: String,
+    card_id: String,
+    grade: String,
+) -> AppResult<Vec<crate::notebook_cards::CardCandidate>> {
+    crate::notebook_cards::grade_card(
+        &state.workspace,
+        &slug,
+        &card_id,
+        &grade,
+        workspace::today(),
+    )
+}

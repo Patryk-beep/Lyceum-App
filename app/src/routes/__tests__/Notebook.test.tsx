@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Notebook } from "../Notebook";
 import { api } from "../../lib/ipc";
@@ -15,6 +15,9 @@ vi.mock("../../lib/ipc", () => ({
     createNotebook: vi.fn(),
     updateNotebook: vi.fn(),
     deleteNotebook: vi.fn(),
+    notebookDueCount: vi.fn(),
+    notebookReviewDue: vi.fn(),
+    notebookReviewGrade: vi.fn(),
   },
 }));
 
@@ -51,6 +54,10 @@ function renderNotebook(initial = "/subject/spanish/notebook") {
   );
 }
 
+beforeEach(() => {
+  vi.mocked(api.notebookDueCount).mockResolvedValue(0);
+  vi.mocked(api.notebookReviewDue).mockResolvedValue([]);
+});
 afterEach(() => vi.clearAllMocks());
 
 describe("Notebook", () => {
@@ -167,5 +174,29 @@ describe("Notebook", () => {
         (screen.getByTestId("notebook-title") as HTMLInputElement).value,
       ).toBe("Nouns"),
     );
+  });
+
+  it("offers flashcard review when cards are due and enters review mode", async () => {
+    vi.mocked(api.listSubjects).mockResolvedValue(SUBJECTS);
+    vi.mocked(api.listNotebooks).mockResolvedValue([]);
+    vi.mocked(api.notebookDueCount).mockResolvedValue(2);
+    vi.mocked(api.notebookReviewDue).mockResolvedValue([
+      {
+        itemId: "nb001#0",
+        prompt: "Capital quiz",
+        answer: "Paris",
+        moduleId: null,
+        boxNum: 1,
+        preview: { again: 1, hard: 3, good: 3, easy: 7 },
+      },
+    ] as unknown as Awaited<ReturnType<typeof api.notebookReviewDue>>);
+    renderNotebook();
+
+    const start = await screen.findByTestId("notebook-review-start");
+    expect(start).toHaveTextContent("Review 2 cards");
+    await userEvent.click(start);
+
+    expect(await screen.findByTestId("notebook-review")).toBeInTheDocument();
+    expect(screen.getByText("Capital quiz")).toBeInTheDocument();
   });
 });

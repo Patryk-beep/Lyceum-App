@@ -82,4 +82,12 @@ export const api = {
     invoke<NotebookEntry>("update_notebook", { slug, id, title, content }),
   deleteNotebook: (slug: string, id: string) =>
     invoke<void>("delete_notebook", { slug, id }),
+  // Notebook flashcards: cloze (==answer==) cards scheduled in a SEPARATE store
+  // (never manifest.review_queue). `moduleId` scopes due cards to one lesson.
+  notebookReviewDue: (slug: string, moduleId?: string) =>
+    invoke<ReviewCandidate[]>("notebook_review_due", { slug, moduleId }),
+  notebookDueCount: (slug: string) =>
+    invoke<number>("notebook_due_count", { slug }),
+  notebookReviewGrade: (slug: string, cardId: string, grade: ReviewGrade) =>
+    invoke<ReviewCandidate[]>("notebook_review_grade", { slug, cardId, grade }),
 };

@@ -6,6 +6,7 @@ mod delete;
 mod engine_cmds;
 mod error;
 mod notebook;
+mod notebook_cards;
 mod prompts;
 mod service;
 mod state;
@@ -109,6 +110,9 @@ pub fn run() {
             commands::create_notebook,
             commands::update_notebook,
             commands::delete_notebook,
+            commands::notebook_review_due,
+            commands::notebook_due_count,
+            commands::notebook_review_grade,
             engine_cmds::preflight,
             engine_cmds::claude_doctor,
             engine_cmds::claude_smoke,
