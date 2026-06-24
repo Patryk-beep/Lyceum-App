@@ -190,3 +190,14 @@
   color: var(--danger-fg);
   background: var(--danger-bg);
 }
+
+/* ---- P4 · Data viz: loud numerals ------------------------------------------------
+   The bar/meter (--gold-bright→--gold), mastery ring (--gold conic) and heatmap
+   (color-mix --gold→--panel-2) already ramp iris via the P0 tokens. Bento states one
+   loud number per tile in Space Mono — route the big numeric displays to the mono face. */
+:root[data-theme^="bento"] .stat__value,
+:root[data-theme^="bento"] .review-due__count,
+:root[data-theme^="bento"] .mastery-ring__value {
+  font-family: var(--font-mono);
+  letter-spacing: -0.5px;
+}
