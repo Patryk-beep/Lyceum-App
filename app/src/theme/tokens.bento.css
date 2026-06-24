@@ -129,3 +129,24 @@
     transform: none;
   }
 }
+
+/* ---- P2 · Pill navigation + coral count badges ----------------------------------
+   Nav items become stadium pills; the active item is an ink-filled pill. Using
+   --lamplight as the fill + --canvas as the text gives an INK pill in light and a LIGHT
+   pill in bento-dark (both ~14:1), so one rule serves both. */
+:root[data-theme^="bento"] .sidebar__item,
+:root[data-theme^="bento"] .loop-nav__item {
+  border-radius: var(--radius-pill);
+}
+:root[data-theme^="bento"] .sidebar__item--active,
+:root[data-theme^="bento"] .loop-nav__item--active {
+  background: var(--lamplight);
+  color: var(--canvas);
+}
+
+/* Count badge: solid coral with ink text (white on coral fails AA at 2.93:1; ink = 5.99:1). */
+:root[data-theme^="bento"] .loop-nav__badge {
+  background: var(--danger);
+  color: var(--on-coral);
+  border: none;
+}
