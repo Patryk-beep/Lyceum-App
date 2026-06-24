@@ -1,6 +1,8 @@
 import { create } from "zustand";
 
 export type ThemeName =
+  | "bento"
+  | "bento-dark"
   | "playful"
   | "playful-dark"
   | "aurelia-dark"
@@ -10,6 +12,8 @@ export type ThemeName =
 
 const KEY = "lyceum-theme";
 const THEMES: ThemeName[] = [
+  "bento",
+  "bento-dark",
   "playful",
   "playful-dark",
   "aurelia-dark",
@@ -17,7 +21,7 @@ const THEMES: ThemeName[] = [
   "almanac",
   "momentum",
 ];
-const DEFAULT_THEME: ThemeName = "playful";
+const DEFAULT_THEME: ThemeName = "bento";
 
 function load(): ThemeName {
   try {

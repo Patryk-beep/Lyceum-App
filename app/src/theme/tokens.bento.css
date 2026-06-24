@@ -1,0 +1,103 @@
+/* Bento — a vibrant, tile-first language: warm-putty canvas, saturated color blocks,
+   confident type, generous radii, springy motion. Imported from the claude.ai/design
+   project "Lyceum app redesign" (Lyceum Bento Design System.dc.html) and fitted to the
+   same token contract as every other theme — accent "gold" slot becomes Iris.
+
+   AA note: every text/background pair below is WCAG-AA audited (see .rune/bento/
+   adversary-bento.md). The iris-100..700 ramp is FILL-ONLY (no text sits on it); accent
+   used as TEXT on the light canvas uses --gold-press (#5b4bd0), not --gold (#6c5ce7).
+   Shared bento component rules live at the foot, scoped to [data-theme^="bento"] so the
+   light theme and its dark companion (tokens.bento-dark.css) share them. */
+
+:root[data-theme="bento"] {
+  /* Neutrals — warm putty */
+  --canvas: #eceae3;
+  --panel: #ffffff;
+  --panel-2: #e3e0d7;
+  --panel-3: #d8d3c7;
+  --lamplight: #1a1916;
+  --text: #1a1916;
+  --muted: #6b675f;
+  --faint: #9a958c;
+  --line: #ddd9cf;
+  --line-strong: #cbc6b9;
+
+  /* Accent — Iris (the contract's "gold" slot). Fills use --gold; accent-as-text on the
+     light canvas uses --gold-press (4.04:1 vs 5.19:1 — see adversary doc). */
+  --gold: #6c5ce7;
+  --gold-bright: #9684ec;
+  --gold-soft: rgba(108, 92, 231, 0.12);
+  --gold-line: rgba(108, 92, 231, 0.32);
+  --gold-press: #5b4bd0;
+  --on-accent: #ffffff;
+
+  /* Amber spark (secondary) — highlights, "today"/new accents */
+  --amber: #ffd166;
+  --amber-soft: rgba(255, 209, 102, 0.2);
+  --amber-press: #e6b84d;
+
+  /* Iris ramp — fills / data-viz only (bar chart, heatmap, tinted tiles) */
+  --iris-100: #eae6fb;
+  --iris-300: #c4bdf0;
+  --iris-500: #9684ec;
+  --iris-700: #6c5ce7;
+
+  /* Subject palette mapped onto the 7 stage slots (cycles Iris/Ochre/Aqua/Rose + teal/coral) */
+  --stage-research: #0ea5a0;
+  --stage-curriculum: #6c5ce7;
+  --stage-teach: #e0902a;
+  --stage-assign: #e0608a;
+  --stage-assess: #ef6f6c;
+  --stage-review: #2bb38a;
+  --stage-capstone: #9684ec;
+
+  /* Semantic — teal success / coral error. The *-fg values are darkened from the source
+     spec so chip/badge text passes AA on the *-bg tints; --on-coral is ink for on-coral. */
+  --success: #2bb38a;
+  --success-bg: #e7f6f0;
+  --success-border: #bfe7da;
+  --success-fg: #137a55;
+  --danger: #ef6f6c;
+  --danger-bg: #fbe4e3;
+  --danger-border: #f5c8c6;
+  --danger-fg: #b23b37;
+  --on-coral: #1a1916;
+
+  /* Type — one typeface (Space Grotesk) + Space Mono for labels/numerals/code */
+  --font-serif: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-sans: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Shape — generous radii, flat elevation (depth from color, not shadow) */
+  --radius: 20px;
+  --radius-sm: 14px;
+  --radius-pill: 999px;
+  --shadow: 0 18px 44px rgba(120, 100, 80, 0.12);
+  --shadow-sm: 0 8px 22px rgba(120, 100, 80, 0.07);
+
+  /* Bento is flat-colorist — no lamp wash */
+  --lamp: none;
+}
+
+/* ===== Shared bento component rules (light + dark) ===============================
+   Scoped to both "bento" and "bento-dark"; authored once here, imported alongside the
+   dark token file. Foundational only in P0 — richer structural polish lands in P1–P5. */
+
+/* Headings ride Space Grotesk heavy and tight (no serif default). */
+:root[data-theme^="bento"] h1,
+:root[data-theme^="bento"] h2,
+:root[data-theme^="bento"] h3 {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* Metrics/numerals use Space Mono for the tactile readout feel. */
+:root[data-theme^="bento"] .metric {
+  font-family: var(--font-mono);
+}
+
+/* Primary button: iris fill (via --gold) with white/ink label via --on-accent — replaces
+   the global rule's hardcoded #1a1505 ink, which is low-contrast on iris. */
+:root[data-theme^="bento"] .btn--primary {
+  color: var(--on-accent);
+}

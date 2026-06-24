@@ -1,0 +1,76 @@
+/* Bento Dark — the Bento language after dusk: ink canvas, the same iris/coral/teal/amber
+   accents brightened for legibility on dark. Fills the same contract as tokens.bento.css
+   and SHARES its component rules (those are scoped to [data-theme^="bento"]).
+
+   Designed here (the imported spec is light-only) and WCAG-AA audited: on the brighter
+   dark iris (#8b7cf0) white text fails (3.37:1), so --on-accent is INK (#15131c, 5.46:1);
+   accent-as-text on the ink canvas uses --iris-text (#b8a9f7, 8.76:1). See adversary doc. */
+
+:root[data-theme="bento-dark"] {
+  /* Neutrals — ink canvas with a faint iris cast */
+  --canvas: #15141b;
+  --panel: #1d1b25;
+  --panel-2: #25232f;
+  --panel-3: #2f2c3c;
+  --lamplight: #ece9f5;
+  --text: #ece9f5;
+  --muted: #a8a3b8;
+  --faint: #756f86;
+  --line: #2f2c3c;
+  --line-strong: #403b54;
+
+  /* Accent — Iris brightened for dark. Fills use --gold; on-accent is INK (white fails);
+     accent-as-text uses --iris-text. */
+  --gold: #8b7cf0;
+  --gold-bright: #a99cf5;
+  --gold-soft: rgba(139, 124, 240, 0.2);
+  --gold-line: rgba(139, 124, 240, 0.45);
+  --gold-press: #6c5ce7;
+  --on-accent: #15131c;
+  --iris-text: #b8a9f7;
+
+  /* Amber spark */
+  --amber: #ffd166;
+  --amber-soft: rgba(255, 209, 102, 0.16);
+  --amber-press: #caa23f;
+
+  /* Iris ramp — fills / data-viz (low = subtle on ink, high = bright iris) */
+  --iris-100: #2c2941;
+  --iris-300: #4a4173;
+  --iris-500: #6c5ce7;
+  --iris-700: #9684ec;
+
+  /* Subject palette (brightened for dark) */
+  --stage-research: #2bc4be;
+  --stage-curriculum: #8b7cf0;
+  --stage-teach: #e8a24a;
+  --stage-assign: #e87aa0;
+  --stage-assess: #f4807d;
+  --stage-review: #3ccfa3;
+  --stage-capstone: #a99cf5;
+
+  /* Semantic — brightened; *-bg are deep tints, *-fg are light for AA on dark */
+  --success: #3ccfa3;
+  --success-bg: #16352b;
+  --success-border: #1f5a48;
+  --success-fg: #6fe3c0;
+  --danger: #f4807d;
+  --danger-bg: #3a1f23;
+  --danger-border: #5a2f33;
+  --danger-fg: #f4a3a0;
+  --on-coral: #1a1916;
+
+  /* Type — same single typeface + mono */
+  --font-serif: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-sans: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Shape — same generous radii; shadows tuned for dark */
+  --radius: 20px;
+  --radius-sm: 14px;
+  --radius-pill: 999px;
+  --shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 8px 22px rgba(0, 0, 0, 0.32);
+
+  --lamp: none;
+}

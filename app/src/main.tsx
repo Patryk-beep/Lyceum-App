@@ -31,6 +31,17 @@ import "@fontsource/geist/800.css";
 import "@fontsource/geist-mono/400.css";
 import "@fontsource/geist-mono/500.css";
 import "@fontsource/geist-mono/600.css";
+// Bento — Space Grotesk (all text) + Space Mono (labels/numerals/code)
+import "@fontsource/space-grotesk/400.css";
+import "@fontsource/space-grotesk/500.css";
+import "@fontsource/space-grotesk/600.css";
+import "@fontsource/space-grotesk/700.css";
+import "@fontsource/space-mono/400.css";
+import "@fontsource/space-mono/700.css";
+/* Import all theme token files BEFORE primitives.css + components.css so each theme's
+   component-scoped overrides (e.g. [data-theme^="bento"] .btn--primary) win on specificity. */
+import "./theme/tokens.bento.css";
+import "./theme/tokens.bento-dark.css";
 import "./theme/tokens.night.css";
 import "./theme/tokens.almanac.css";
 import "./theme/tokens.momentum.css";
