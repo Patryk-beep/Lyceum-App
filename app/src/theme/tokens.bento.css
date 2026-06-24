@@ -201,3 +201,45 @@
   font-family: var(--font-mono);
   letter-spacing: -0.5px;
 }
+
+/* ---- P5 · Bento Dashboard board --------------------------------------------------
+   The dashboard becomes a 4-col bento grid: a 2×2 hero, the 4 stat tiles forming a 2×2
+   beside it (display:contents lifts them into the parent grid — scoped to bento ONLY, so
+   the other themes keep their .stat-grid container), then review-due + subjects span the
+   full width. CSS-only: no markup change, so every Dashboard test (testid queries) holds. */
+:root[data-theme^="bento"] .dashboard {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+:root[data-theme^="bento"] .resume-hero {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+:root[data-theme^="bento"] .stat-grid {
+  display: contents;
+}
+:root[data-theme^="bento"] .stat-grid > .stat {
+  grid-column: span 1;
+}
+:root[data-theme^="bento"] .dashboard > .review-due,
+:root[data-theme^="bento"] .dashboard > div:last-child {
+  grid-column: 1 / -1;
+}
+
+/* One loud number per stat tile. */
+:root[data-theme^="bento"] .stat__value {
+  font-size: 2.6rem;
+  line-height: 1.05;
+}
+
+/* Subject "reviews due" → a prominent coral pill (ink text, AA 5.99). */
+:root[data-theme^="bento"] .subject-card__due {
+  align-self: flex-start;
+  background: var(--danger);
+  color: var(--on-coral);
+  padding: 3px 11px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+}
