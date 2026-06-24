@@ -2,13 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { RichMarkdown } from "../components/RichMarkdown";
+import { insertMarkdown, type MdKind } from "../lib/markdownEdit";
+import { searchNotes, type NoteHit } from "../lib/notebookSearch";
 import {
   useDeleteNotebook,
   useNotebooks,
   useSaveNotebook,
   useSubjects,
 } from "../lib/query";
-import type { NotebookEntry } from "../lib/types";
 
 /** The editor's working copy. `id === null` is an unsaved new note (not persisted
  *  until it has content), otherwise it mirrors a saved note. */
@@ -39,15 +40,51 @@ function exportNote(entry: { title: string; content: string; id: string }) {
   URL.revokeObjectURL(url);
 }
 
+const TOOLS: { kind: MdKind; label: string; title: string }[] = [
+  { kind: "h2", label: "H", title: "Heading" },
+  { kind: "bold", label: "B", title: "Bold" },
+  { kind: "italic", label: "I", title: "Italic" },
+  { kind: "code", label: "</>", title: "Code" },
+  { kind: "ul", label: "•", title: "Bullet list" },
+  { kind: "check", label: "☑", title: "Checklist" },
+  { kind: "quote", label: "❝", title: "Quote" },
+  { kind: "link", label: "🔗", title: "Link" },
+];
+
+function Toolbar({ onInsert }: { onInsert: (k: MdKind) => void }) {
+  return (
+    <div className="notebook__toolbar" role="toolbar" aria-label="Formatting">
+      {TOOLS.map((t) => (
+        <button
+          key={t.kind}
+          type="button"
+          className="notebook__tool"
+          title={t.title}
+          aria-label={t.title}
+          // Keep the textarea focused + selected so the insert lands at the cursor.
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => onInsert(t.kind)}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function NoteList({
-  notes,
+  hits,
   activeId,
+  query,
+  onQuery,
   onPick,
   onNew,
 }: {
-  notes: NotebookEntry[];
+  hits: NoteHit[];
   activeId: string | null;
-  onPick: (n: NotebookEntry) => void;
+  query: string;
+  onQuery: (q: string) => void;
+  onPick: (hit: NoteHit) => void;
   onNew: () => void;
 }) {
   return (
@@ -59,26 +96,38 @@ function NoteList({
       >
         + New note
       </button>
-      {notes.length === 0 ? (
-        <p className="muted notebook__list-empty">No notes yet.</p>
+      <input
+        className="wizard__input notebook__search"
+        type="search"
+        placeholder="Search notes…"
+        value={query}
+        onChange={(e) => onQuery(e.target.value)}
+        aria-label="Search notes"
+        data-testid="notebook-search"
+      />
+      {hits.length === 0 ? (
+        <p className="muted notebook__list-empty">
+          {query ? "No matches." : "No notes yet."}
+        </p>
       ) : (
         <ul className="notebook__items">
-          {notes.map((n) => (
-            <li key={n.id}>
+          {hits.map((hit) => (
+            <li key={hit.entry.id}>
               <button
                 className={
                   "notebook__item" +
-                  (n.id === activeId ? " notebook__item--active" : "")
+                  (hit.entry.id === activeId ? " notebook__item--active" : "")
                 }
-                aria-current={n.id === activeId ? "true" : undefined}
-                onClick={() => onPick(n)}
+                aria-current={hit.entry.id === activeId ? "true" : undefined}
+                onClick={() => onPick(hit)}
               >
                 <span className="notebook__item-title">
-                  {n.title.trim() || "Untitled note"}
+                  {hit.entry.title.trim() || "Untitled note"}
                 </span>
+                <span className="notebook__item-snippet muted">{hit.snippet}</span>
                 <span className="notebook__item-meta metric faint">
-                  {n.updatedAt}
-                  {n.moduleId ? ` · ${n.moduleId}` : ""}
+                  {hit.entry.updatedAt}
+                  {hit.entry.moduleId ? ` · ${hit.entry.moduleId}` : ""}
                 </span>
               </button>
             </li>
@@ -93,19 +142,25 @@ function Editor({
   slug,
   draft,
   saving,
+  preview,
+  setPreview,
+  bodyRef,
   onChange,
   onBlurSave,
+  onInsert,
   onDelete,
 }: {
   slug: string;
   draft: Draft;
   saving: boolean;
+  preview: boolean;
+  setPreview: (v: boolean) => void;
+  bodyRef: React.RefObject<HTMLTextAreaElement>;
   onChange: (patch: Partial<Draft>) => void;
   onBlurSave: () => void;
+  onInsert: (k: MdKind) => void;
   onDelete: () => void;
 }) {
-  const [preview, setPreview] = useState(false);
-
   return (
     <section className="notebook__editor" aria-label="Note editor">
       <div className="notebook__editor-head">
@@ -161,15 +216,19 @@ function Editor({
           )}
         </div>
       ) : (
-        <textarea
-          className="notebook__body"
-          placeholder="Write your note in Markdown…"
-          value={draft.content}
-          onChange={(e) => onChange({ content: e.target.value })}
-          onBlur={onBlurSave}
-          aria-label="Note content"
-          data-testid="notebook-body"
-        />
+        <>
+          <Toolbar onInsert={onInsert} />
+          <textarea
+            ref={bodyRef}
+            className="notebook__body"
+            placeholder="Write your note in Markdown…"
+            value={draft.content}
+            onChange={(e) => onChange({ content: e.target.value })}
+            onBlur={onBlurSave}
+            aria-label="Note content"
+            data-testid="notebook-body"
+          />
+        </>
       )}
 
       <div className="notebook__editor-foot">
@@ -208,12 +267,19 @@ export function Notebook() {
   const [picked, setPicked] = useState<string | null>(null);
   const slug = params.slug ?? picked ?? subjects?.[0]?.slug ?? "";
   const moduleParam = searchParams.get("module") ?? undefined;
+  const noteParam = searchParams.get("note") ?? undefined;
 
   const { data: notes, isLoading } = useNotebooks(slug);
   const save = useSaveNotebook(slug);
   const del = useDeleteNotebook(slug);
 
   const [draft, setDraft] = useState<Draft>(() => emptyDraft(moduleParam));
+  const [preview, setPreview] = useState(false);
+  const [query, setQuery] = useState("");
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  // A selection to apply to the textarea after the next content render (toolbar
+  // insert, or scroll-to-match when opening a search hit).
+  const pendingSel = useRef<[number, number] | null>(null);
 
   // Keep a ref so the blur handler reads the freshest draft, not a stale closure.
   const draftRef = useRef(draft);
@@ -229,6 +295,28 @@ export function Notebook() {
       setDraft(emptyDraft(moduleParam));
     }
   }, [moduleParam]);
+
+  // Deep-link ?note=<id> (from search/backlinks/global) pre-opens that note once.
+  const openedNote = useRef(false);
+  useEffect(() => {
+    if (noteParam && !openedNote.current && notes) {
+      const n = notes.find((x) => x.id === noteParam);
+      if (n) {
+        openedNote.current = true;
+        setDraft({ id: n.id, title: n.title, content: n.content, moduleId: n.moduleId });
+      }
+    }
+  }, [noteParam, notes]);
+
+  // Apply a pending selection (focus + setSelectionRange scrolls it into view).
+  useEffect(() => {
+    if (pendingSel.current && bodyRef.current) {
+      const [s, e] = pendingSel.current;
+      pendingSel.current = null;
+      bodyRef.current.focus();
+      bodyRef.current.setSelectionRange(s, e);
+    }
+  }, [draft.content]);
 
   const change = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
@@ -247,15 +335,37 @@ export function Notebook() {
     if (d.id === null) setDraft((cur) => ({ ...cur, id: saved.id }));
   };
 
-  const pick = (n: NotebookEntry) =>
+  const insert = (kind: MdKind) => {
+    const ta = bodyRef.current;
+    if (!ta) return;
+    const r = insertMarkdown(
+      draftRef.current.content,
+      ta.selectionStart,
+      ta.selectionEnd,
+      kind,
+    );
+    pendingSel.current = [r.selStart, r.selEnd];
+    change({ content: r.content });
+  };
+
+  const pick = (hit: NoteHit) => {
+    const n = hit.entry;
+    setPreview(false);
     setDraft({ id: n.id, title: n.title, content: n.content, moduleId: n.moduleId });
-  const newNote = () => setDraft(emptyDraft());
+    if (hit.matchIndex >= 0) {
+      pendingSel.current = [hit.matchIndex, hit.matchIndex + query.trim().length];
+    }
+  };
+  const newNote = () => {
+    setPreview(false);
+    setDraft(emptyDraft());
+  };
   const remove = async () => {
     if (draft.id) await del.mutateAsync(draft.id);
     setDraft(emptyDraft());
   };
 
-  const list = useMemo(() => notes ?? [], [notes]);
+  const hits = useMemo(() => searchNotes(notes ?? [], query), [notes, query]);
 
   if (!slug && subjectsLoading) return <div className="muted">Loading…</div>;
   if (!slug) return <div className="muted">No subjects yet.</div>;
@@ -288,8 +398,10 @@ export function Notebook() {
           <p className="muted">Loading notes…</p>
         ) : (
           <NoteList
-            notes={list}
+            hits={hits}
             activeId={draft.id}
+            query={query}
+            onQuery={setQuery}
             onPick={pick}
             onNew={newNote}
           />
@@ -298,8 +410,12 @@ export function Notebook() {
           slug={slug}
           draft={draft}
           saving={save.isPending}
+          preview={preview}
+          setPreview={setPreview}
+          bodyRef={bodyRef}
           onChange={change}
           onBlurSave={persist}
+          onInsert={insert}
           onDelete={remove}
         />
       </div>

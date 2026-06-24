@@ -1,9 +1,44 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { ArtifactView } from "../components/ArtifactView";
 import { ConfirmDestructive } from "../components/ConfirmDestructive";
-import { useDeleteLesson, useLessons } from "../lib/query";
+import { useDeleteLesson, useLessons, useNotebooks } from "../lib/query";
+
+/** Backlinks: notes anchored to this lesson's module + a quick "add note" that
+ *  pre-anchors a new note to the module (?module=). */
+function LessonNotes({ slug, moduleId }: { slug: string; moduleId: string | null }) {
+  const { data: notes } = useNotebooks(slug);
+  const mine = (notes ?? []).filter((n) => moduleId && n.moduleId === moduleId);
+  const addTo = `/subject/${slug}/notebook${moduleId ? `?module=${moduleId}` : ""}`;
+
+  return (
+    <section className="lesson-notes" aria-label="Notes for this lesson">
+      <div className="lesson-notes__head">
+        <h2 className="dashboard__section-title">Your notes</h2>
+        <Link className="btn btn--outline" to={addTo} data-testid="lesson-add-note">
+          + Add note
+        </Link>
+      </div>
+      {mine.length === 0 ? (
+        <p className="muted">No notes for this lesson yet.</p>
+      ) : (
+        <ul className="lesson-notes__list">
+          {mine.map((n) => (
+            <li key={n.id}>
+              <Link to={`/subject/${slug}/notebook?note=${n.id}`}>
+                <span className="lesson-notes__title">
+                  {n.title.trim() || "Untitled note"}
+                </span>
+                <span className="metric faint"> · {n.updatedAt}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 /** /subject/:slug/research */
 export function Research() {
@@ -46,6 +81,8 @@ export function Lesson() {
         </div>
       )}
       <ArtifactView slug={slug} relpath={`lessons/${file}`} title="Lesson" />
+
+      <LessonNotes slug={slug} moduleId={moduleId} />
 
       {confirming && (
         <ConfirmDestructive

@@ -9,6 +9,7 @@ import { Dashboard } from "./routes/Dashboard";
 import { Diagnostics } from "./routes/Diagnostics";
 import { Lessons } from "./routes/Lessons";
 import { Notebook } from "./routes/Notebook";
+import { NotebookGlobal } from "./routes/NotebookGlobal";
 import { Placement } from "./routes/Placement";
 import { Artifact, Lesson, Research } from "./routes/Reader";
 import { Review } from "./routes/Review";
@@ -38,7 +39,7 @@ export function App() {
           <Route path="/subject/:slug/notebook" element={<Notebook />} />
           <Route path="/review" element={<Review />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/notebook" element={<Notebook />} />
+          <Route path="/notebook" element={<NotebookGlobal />} />
           <Route path="/diagnostics" element={<Diagnostics />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/library" replace />} />

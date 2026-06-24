@@ -2237,3 +2237,69 @@
 .notebook__delete {
   color: var(--danger);
 }
+.notebook__search {
+  width: 100%;
+  font-size: 13px;
+}
+.notebook__item-snippet {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notebook__items--global .notebook__item {
+  text-decoration: none;
+}
+.notebook__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.notebook__tool {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--panel-2, var(--panel));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.notebook__tool:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+
+/* ---- Lesson backlinks (notes anchored to a lesson's module) ---- */
+.lesson-notes {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.lesson-notes__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.lesson-notes__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lesson-notes__list a {
+  color: var(--text);
+  text-decoration: none;
+}
+.lesson-notes__list a:hover .lesson-notes__title {
+  color: var(--gold);
+}
+.lesson-notes__title {
+  font-weight: 600;
+}

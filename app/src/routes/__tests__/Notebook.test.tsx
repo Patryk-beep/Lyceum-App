@@ -139,4 +139,33 @@ describe("Notebook", () => {
       "m02",
     );
   });
+
+  it("filters the list with the search box", async () => {
+    vi.mocked(api.listSubjects).mockResolvedValue(SUBJECTS);
+    vi.mocked(api.listNotebooks).mockResolvedValue([
+      note(),
+      note({ id: "nb002", title: "Nouns", content: "el la" }),
+    ]);
+    renderNotebook();
+
+    await screen.findByText("Verbs");
+    await userEvent.type(screen.getByTestId("notebook-search"), "nouns");
+    expect(screen.getByText("Nouns")).toBeInTheDocument();
+    expect(screen.queryByText("Verbs")).not.toBeInTheDocument();
+  });
+
+  it("pre-opens a note from ?note=", async () => {
+    vi.mocked(api.listSubjects).mockResolvedValue(SUBJECTS);
+    vi.mocked(api.listNotebooks).mockResolvedValue([
+      note(),
+      note({ id: "nb002", title: "Nouns", content: "el la" }),
+    ]);
+    renderNotebook("/subject/spanish/notebook?note=nb002");
+
+    await waitFor(() =>
+      expect(
+        (screen.getByTestId("notebook-title") as HTMLInputElement).value,
+      ).toBe("Nouns"),
+    );
+  });
 });
