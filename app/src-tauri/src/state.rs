@@ -19,6 +19,11 @@ pub const MAX_CONCURRENT_TURNS: usize = 4;
 /// AND a skill child at once, so total live children ≤ MAX_CONCURRENT_TURNS + this.
 pub const MAX_CONCURRENT_TUTOR: usize = 2;
 
+/// Max concurrent live NOTEBOOK-ASSIST turns (a third small read-only pool). One-shot
+/// children — spawned per request, shut down after — so a bounded semaphore is enough
+/// (no warm-session cell needed).
+pub const MAX_CONCURRENT_NOTEBOOK: usize = 2;
+
 /// One lazily-spawned warm `claude` child per subject, behind its own async lock.
 pub type SessionCell = Arc<Mutex<Option<ClaudeSession>>>;
 
@@ -43,6 +48,8 @@ pub struct AppState {
     pub tutor_sessions: Mutex<HashMap<String, SessionCell>>,
     /// Bounds concurrent live tutor turns (see [`MAX_CONCURRENT_TUTOR`]).
     pub tutor_slots: Arc<Semaphore>,
+    /// Bounds concurrent live notebook-assist turns (see [`MAX_CONCURRENT_NOTEBOOK`]).
+    pub notebook_slots: Arc<Semaphore>,
 }
 
 impl AppState {

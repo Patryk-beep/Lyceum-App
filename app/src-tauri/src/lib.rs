@@ -6,6 +6,7 @@ mod delete;
 mod engine_cmds;
 mod error;
 mod notebook;
+mod notebook_assist;
 mod notebook_cards;
 mod prompts;
 mod service;
@@ -82,6 +83,7 @@ pub fn run() {
                 turn_slots: Arc::new(Semaphore::new(state::MAX_CONCURRENT_TURNS)),
                 tutor_sessions: Default::default(),
                 tutor_slots: Arc::new(Semaphore::new(state::MAX_CONCURRENT_TUTOR)),
+                notebook_slots: Arc::new(Semaphore::new(state::MAX_CONCURRENT_NOTEBOOK)),
             });
             Ok(())
         })
@@ -123,6 +125,7 @@ pub fn run() {
             tutor::ask_tutor,
             tutor::read_tutor_thread,
             tutor::clear_tutor_thread,
+            notebook_assist::notebook_assist,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

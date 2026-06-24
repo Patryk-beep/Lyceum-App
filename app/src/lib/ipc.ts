@@ -90,4 +90,8 @@ export const api = {
     invoke<number>("notebook_due_count", { slug }),
   notebookReviewGrade: (slug: string, cardId: string, grade: ReviewGrade) =>
     invoke<ReviewCandidate[]>("notebook_review_grade", { slug, cardId, grade }),
+  // Read-only AI assist over a note. Returns an editable suggestion text the learner
+  // accepts or rejects (never auto-applied). mode: flashcards|summarize|related|tags.
+  notebookAssist: (slug: string, mode: string, content: string) =>
+    invoke<string>("notebook_assist", { slug, mode, content }),
 };

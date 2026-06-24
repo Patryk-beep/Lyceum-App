@@ -462,7 +462,9 @@ pub async fn reset_curriculum(state: State<'_, AppState>, slug: String) -> AppRe
 #[cfg(test)]
 mod tests {
     use super::{file_is_valid_json, newly_fired_milestones, remediation_progressed};
-    use crate::state::{AppState, MAX_CONCURRENT_TURNS, MAX_CONCURRENT_TUTOR};
+    use crate::state::{
+        AppState, MAX_CONCURRENT_NOTEBOOK, MAX_CONCURRENT_TURNS, MAX_CONCURRENT_TUTOR,
+    };
     use lyceum_core::model::{Manifest, ModuleId};
     use std::fs;
     use std::sync::Arc;
@@ -479,6 +481,7 @@ mod tests {
             turn_slots: Arc::new(Semaphore::new(MAX_CONCURRENT_TURNS)),
             tutor_sessions: Default::default(),
             tutor_slots: Arc::new(Semaphore::new(MAX_CONCURRENT_TUTOR)),
+            notebook_slots: Arc::new(Semaphore::new(MAX_CONCURRENT_NOTEBOOK)),
         }
     }
 

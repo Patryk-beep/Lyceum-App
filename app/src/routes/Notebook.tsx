@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
+import { NotebookAssist } from "../components/NotebookAssist";
 import { NotebookReview } from "../components/NotebookReview";
 import { RichMarkdown } from "../components/RichMarkdown";
 import { insertMarkdown, type MdKind } from "../lib/markdownEdit";
@@ -151,6 +152,7 @@ function Editor({
   onChange,
   onBlurSave,
   onInsert,
+  onAccept,
   onDelete,
 }: {
   slug: string;
@@ -162,6 +164,7 @@ function Editor({
   onChange: (patch: Partial<Draft>) => void;
   onBlurSave: () => void;
   onInsert: (k: MdKind) => void;
+  onAccept: (text: string) => void;
   onDelete: () => void;
 }) {
   return (
@@ -231,6 +234,7 @@ function Editor({
             aria-label="Note content"
             data-testid="notebook-body"
           />
+          <NotebookAssist slug={slug} content={draft.content} onAccept={onAccept} />
         </>
       )}
 
@@ -353,6 +357,23 @@ export function Notebook() {
     change({ content: r.content });
   };
 
+  // Accept an AI suggestion: append it to the note body and save (so flashcard
+  // clozes immediately reconcile into the card store). Never auto-applied — this
+  // only runs on the learner's explicit "Accept".
+  const acceptAssist = async (text: string) => {
+    const d = draftRef.current;
+    const content = (d.content ? `${d.content}\n\n${text}` : text).trim();
+    setDraft((cur) => ({ ...cur, content }));
+    if (d.id === null && content === "") return;
+    const saved = await save.mutateAsync({
+      id: d.id ?? undefined,
+      title: d.title,
+      content,
+      moduleId: d.moduleId,
+    });
+    if (d.id === null) setDraft((cur) => ({ ...cur, id: saved.id }));
+  };
+
   const pick = (hit: NoteHit) => {
     const n = hit.entry;
     setPreview(false);
@@ -435,6 +456,7 @@ export function Notebook() {
             onChange={change}
             onBlurSave={persist}
             onInsert={insert}
+            onAccept={acceptAssist}
             onDelete={remove}
           />
         </div>

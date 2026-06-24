@@ -2315,3 +2315,36 @@
   flex: 1;
   min-height: 0;
 }
+.notebook__assist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.notebook__assist-toggle {
+  align-self: flex-start;
+}
+.notebook__assist-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.notebook__assist-status {
+  margin: 0;
+  font-size: 13px;
+}
+.notebook__assist-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+.notebook__assist-text {
+  min-height: 120px;
+}
+.notebook__assist-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

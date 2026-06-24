@@ -18,6 +18,7 @@ vi.mock("../../lib/ipc", () => ({
     notebookDueCount: vi.fn(),
     notebookReviewDue: vi.fn(),
     notebookReviewGrade: vi.fn(),
+    notebookAssist: vi.fn(),
   },
 }));
 
