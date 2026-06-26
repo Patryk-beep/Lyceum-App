@@ -133,3 +133,49 @@ fn research_topic_preserves_headless_invariants() {
         "mastery-read-only invariant",
     );
 }
+
+// ----- teach-lesson + build-curriculum (readers) — P1 -----------------------
+
+#[test]
+fn teach_lesson_surfaces_open_questions_as_expert_disagreement() {
+    let s = read_skill("teach-lesson");
+    must_contain(
+        "teach-lesson",
+        &s,
+        "openQuestions",
+        "reader must consume the shared contract key",
+    );
+    // F9: framed as field-level disagreement, DISTINCT from a misconception.
+    // This phrase appears in exactly one load-bearing place, so reverting the
+    // surfacing makes this test go red (honest red-before/green-after).
+    must_contain(
+        "teach-lesson",
+        &s,
+        "experts still disagree",
+        "frame open questions as field disagreement, not 'you're wrong' (F9)",
+    );
+    // F4: absence rule — a legacy map has no key; never hallucinate to fill it.
+    must_contain(
+        "teach-lesson",
+        &s,
+        "never invent open questions",
+        "absent/[] => skip the move entirely, never fabricate (F4)",
+    );
+}
+
+#[test]
+fn build_curriculum_surfaces_open_questions() {
+    let s = read_skill("build-curriculum");
+    must_contain(
+        "build-curriculum",
+        &s,
+        "openQuestions",
+        "curriculum.md must surface open questions alongside misconceptions",
+    );
+    must_contain(
+        "build-curriculum",
+        &s,
+        "never invent open questions",
+        "absence rule mirrored in the reader (F4)",
+    );
+}
