@@ -1,6 +1,6 @@
 [package]
 name = "lyceum-app"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
 license = "MIT"
 description = "Lyceum-App — desktop GUI over the Lyceum learning system."
